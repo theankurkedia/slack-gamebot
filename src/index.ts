@@ -19,13 +19,13 @@ mongoose
   })
   .then(() => {
     console.log("connected");
-    const instance = new QuestionModel();
-    instance.question = "hello";
+    // const instance = new QuestionModel();
+    // instance.question = "hello";
     // instance.save(function(err: any) {
     //   //
     // });
 
-    console.log(instance);
+    // console.log(instance);
   })
   .catch((err: any) => {
     console.log("error in connection", err);
