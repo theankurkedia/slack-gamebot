@@ -8,6 +8,32 @@ import {
   cancelGame,
 } from "./actions";
 
+import mongoose from "mongoose";
+import { QuestionModel } from "./models/Question";
+
+const uri: any = process.env.MONGODB_URI;
+mongoose
+  .connect(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("connected");
+    const instance = new QuestionModel();
+    instance.question = "hello";
+    // instance.save(function(err: any) {
+    //   //
+    // });
+
+    console.log(instance);
+  })
+  .catch((err: any) => {
+    console.log("error in connection", err);
+  });
+
+// const m = new MyModel();
+// m.save();
+
 const app = new App({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
   token: process.env.SLACK_BOT_TOKEN,
@@ -27,6 +53,22 @@ const commandsList = `\`\`\`/gamebot create - create a new game
 /gamebot assign <id> <name> @<channel>
 /gamebot result <id> <name> - find the result of person \`\`\``;
 
+app.message("whoami", async ({ say, context }) => {
+  console.log("je;;p", context);
+  await say(`User Details: ${JSON.stringify(context.user)}`);
+});
+
+app.event("app_mention", async ({ context, event }: any) => {
+  try {
+    await app.client.chat.postMessage({
+      token: context.botToken,
+      channel: event.channel,
+      text: `Hey <@${event.user}>, you mentioned me.`,
+    });
+  } catch (e) {
+    console.log(`error responding ${e}`);
+  }
+});
 app.command("/gamebot", async ({ ack, body, context, say, command }: any) => {
   let out;
   await ack();
