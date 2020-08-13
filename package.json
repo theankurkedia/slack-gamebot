@@ -18,6 +18,9 @@
     },
     "dependencies": {
         "@slack/bolt": "^2.2.3",
-        "dotenv": "^8.2.0"
+        "@types/mongoose": "^5.7.36",
+        "dotenv": "^8.2.0",
+        "mongodb": "^3.6.0",
+        "mongoose": "^5.9.28"
     }
 }

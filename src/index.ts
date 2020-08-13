@@ -1,6 +1,32 @@
 require("dotenv").config();
 import { App } from "@slack/bolt";
 
+import mongoose from "mongoose";
+import { QuestionModel } from "./models/Question";
+
+const uri: any = process.env.MONGODB_URI;
+mongoose
+  .connect(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("connected");
+    const instance = new QuestionModel();
+    instance.question = "hello";
+    // instance.save(function(err: any) {
+    //   //
+    // });
+
+    console.log(instance);
+  })
+  .catch((err: any) => {
+    console.log("error in connection", err);
+  });
+
+// const m = new MyModel();
+// m.save();
+
 const app = new App({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
   token: process.env.SLACK_BOT_TOKEN,
@@ -12,6 +38,11 @@ const app = new App({
 
   console.log("⚡️ Bolt app is running!");
 })();
+
+app.message("whoami", async ({ say, context }) => {
+  console.log("je;;p", context);
+  await say(`User Details: ${JSON.stringify(context.user)}`);
+});
 
 app.event("app_mention", async ({ context, event }: any) => {
   try {
