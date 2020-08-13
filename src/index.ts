@@ -3,6 +3,7 @@ import { App } from "@slack/bolt";
 
 import mongoose from "mongoose";
 import { QuestionModel } from "./models/Question";
+import { QuizModel } from "./models/Quiz";
 
 const uri: any = process.env.MONGODB_URI;
 mongoose
@@ -12,17 +13,22 @@ mongoose
   })
   .then(() => {
     console.log("connected");
-    // const instance = new QuestionModel();
-    // instance.question = "hello";
-    // instance.save(function(err: any) {
-    //   //
-    // });
 
     // console.log(instance);
   })
   .catch((err: any) => {
     console.log("error in connection", err);
   });
+
+// instance.name = "hello";
+
+// const question = new QuestionModel();
+// question.question = "How are you?";
+// instance.questions = [question];
+
+// instance.save(function(err: any) {
+//   //
+// });
 
 // const m = new MyModel();
 // m.save();
@@ -38,6 +44,58 @@ const app = new App({
 
   console.log("⚡️ Bolt app is running!");
 })();
+
+app.message("create test", async ({ say, context }) => {
+  console.log(context);
+
+  const quiz = new QuizModel();
+  quiz.name = "Test";
+  quiz.save(function(err: any) {
+    if (err) {
+      console.log("hello here", err.message);
+      say(err.message);
+    } else {
+      say("Quiz created successfully");
+    }
+  });
+});
+
+app.command("/botsuraj", async ({ ack, body, say, context }) => {
+  await ack();
+  const quiz = await QuizModel.findOne({ name: body.text });
+  if (quiz) {
+    console.log(quiz);
+    await say(`Quiz with name ${body.text} found`);
+  } else {
+    await say("Sorry, Invalid command");
+  }
+  // const quiz = new QuizModel();
+  // quiz.name = "Test";
+  // quiz.save(function(err: any) {
+  //   if (err) {
+  //     console.log("hello here", err.message);
+  //     say(err.message);
+  //   } else {
+  //     say("Quiz created successfully");
+  //   }
+  // });
+});
+
+// app.command("/botsuraj", async ({ ack, body, say, context }) => {
+//   console.log("jello here", context, body);
+
+//   await say("Quiz created successfully");
+//   // const quiz = new QuizModel();
+//   // quiz.name = "Test";
+//   // quiz.save(function(err: any) {
+//   //   if (err) {
+//   //     console.log("hello here", err.message);
+//   //     say(err.message);
+//   //   } else {
+//   //     say("Quiz created successfully");
+//   //   }
+//   // });
+// });
 
 app.message("whoami", async ({ say, context }) => {
   console.log("je;;p", context);

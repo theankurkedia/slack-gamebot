@@ -1,3 +1,6 @@
+import { QuestionModel, QuestionSchema } from "./Question";
+import { ScoreboardSchema } from "./Scoreboard";
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
@@ -6,21 +9,13 @@ const Schema = mongoose.Schema;
  */
 
 const QuizSchema = new Schema({
-  name: String,
+  name: { type: String, unique: true, required: true },
+  config: String,
+  running: { type: Boolean, default: false },
+  channel: { type: String, defautl: "" },
+  questions: [QuestionSchema],
+  scoreboard: [ScoreboardSchema],
 });
-// a setter
-// QuizSchema.path("question").set(function(question: any) {
-//   return question;
-// });
-
-// middleware
-// QuizSchema.pre("save", function(next: any) {
-//   next();
-// });
-
-/**
- * Methods
- */
 
 QuizSchema.methods = {
   test: function() {
@@ -41,4 +36,4 @@ QuizSchema.statics = {
   },
 };
 
-export const QuizModel = mongoose.model("Question", QuizSchema);
+export const QuizModel = mongoose.model("quizzes", QuizSchema);

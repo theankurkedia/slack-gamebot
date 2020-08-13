@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
  * User Schema
  */
 
-const QuestionSchema = new Schema({
+export const QuestionSchema = new Schema({
   question: String,
   questionType: String,
   options: String,
@@ -76,4 +76,4 @@ QuestionSchema.statics = {
   },
 };
 
-export const QuestionModel = mongoose.model("Question", QuestionSchema);
+export const QuestionModel = mongoose.model("questions", QuestionSchema);
