@@ -123,7 +123,7 @@ app.message("whoami", async ({ say, context }) => {
 
 app.command(
   `/${process.env.COMMAND_NAME}`,
-  async ({ ack, body, context, say, command }: any) => {
+  async ({ ack, body, context, say, command }) => {
     let out;
     await ack();
     let textArray = command.text.split(" ");
@@ -147,10 +147,9 @@ app.command(
         break;
       case "start":
         if (textArray[1]) {
-          out = "Starting in 3..2..1";
-          startGame(textArray[1]);
+          startGame(app, context, say, textArray[1]);
         } else {
-          out = "Game does not exist";
+          say("Please mention the name of the game.");
         }
         break;
       case "cancel":
