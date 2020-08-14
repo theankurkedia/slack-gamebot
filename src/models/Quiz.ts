@@ -21,6 +21,10 @@ QuizSchema.methods = {
   test: function() {
     return "test";
   },
+
+  addQuestion: function(question: typeof QuestionModel) {
+    this.questions.push(question);
+  },
 };
 
 /**

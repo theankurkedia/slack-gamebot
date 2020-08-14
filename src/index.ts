@@ -69,7 +69,7 @@ app.message("create test", async ({ say, context }) => {
 
 app.command("/botsuraj", async ({ ack, body, say, context }) => {
   await ack();
-  const quiz = await QuizModel.findOne({ name: body.text });
+  const quiz = await QuizModel.find({});
   if (quiz) {
     console.log(quiz);
     await say(`Quiz with name ${body.text} found`);
