@@ -106,12 +106,12 @@ app.message("create test", async ({ say, context }) => {
 //   //   }
 //   // });
 // });
-const commandsList = `\`\`\`/gamebot create - create a new game
-/gamebot cancel <id> - cancel the creation of game
-/gamebot help  - list out the commands
-/gamebot start <id> - start the game
-/gamebot assign <id> <name> @<channel>
-/gamebot result <id> <name> - find the result of person \`\`\``;
+const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create - create a new game
+/${process.env.COMMAND_NAME} cancel <id> - cancel the creation of game
+/${process.env.COMMAND_NAME} help  - list out the commands
+/${process.env.COMMAND_NAME} start <id> - start the game
+/${process.env.COMMAND_NAME} assign <id> <name> @<channel>
+/${process.env.COMMAND_NAME} result <id> <name> - find the result of person \`\`\``;
 
 app.message("whoami", async ({ say, context }) => {
   console.log("je;;p", context);
@@ -119,7 +119,7 @@ app.message("whoami", async ({ say, context }) => {
 });
 
 app.command(
-  `/${process.env.BOTNAME}`,
+  `/${process.env.COMMAND_NAME}`,
   async ({ ack, body, context, say, command }: any) => {
     let out;
     await ack();
@@ -196,7 +196,9 @@ app.view(
     let msg = "";
 
     const dataInput = view["state"]["values"];
+
     const quiz = new QuizModel();
+
     Object.entries(dataInput).map((entry) => {
       let key = entry[0];
       let value = getValueFromFormInput(entry[1]);
@@ -206,8 +208,9 @@ app.view(
       } else if (key.startsWith("question_")) {
         const questionObj = new QuestionModel();
         questionObj.question = value;
-        questionObj.answer = "answer";
-
+        questionObj.answer = getValueFromFormInput(
+          dataInput[`answer_${key.split(`question_`)[1]}`]
+        );
         quiz.addQuestion(questionObj);
       }
     });
