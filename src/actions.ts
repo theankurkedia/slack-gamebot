@@ -130,6 +130,31 @@ export function setGameType(type: string) {
   // sets the game type
 }
 export function startGame(name: string) {
+  const quiz1 = {
+    name: "quiz1",
+
+    config: {
+      // schedule info for slack
+    },
+    running: false,
+    // channel: "string",
+    questions: [
+      {
+        question: "Which of the following is not a fruit?",
+        questionType: "string",
+        options: ["pomegrenate", "banana", "apple", "potato"],
+        answer: "potato",
+        answerType: "mcq",
+      },
+    ],
+    scoreboard: {
+      score: new Map(),
+      getUserScore: (userId: string) => {},
+      setUserScore: (userId: string, score: number) => {
+        this.score;
+      },
+    },
+  };
   // start game
 }
 export function cancelGame(name: string) {
