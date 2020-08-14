@@ -106,60 +106,63 @@ app.message("create test", async ({ say, context }) => {
 //   //   }
 //   // });
 // });
-const commandsList = `\`\`\`/gamebot create - create a new game
-/gamebot cancel <id> - cancel the creation of game
-/gamebot help  - list out the commands
-/gamebot start <id> - start the game
-/gamebot assign <id> <name> @<channel>
-/gamebot result <id> <name> - find the result of person \`\`\``;
+const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create - create a new game
+/${process.env.COMMAND_NAME} cancel <id> - cancel the creation of game
+/${process.env.COMMAND_NAME} help  - list out the commands
+/${process.env.COMMAND_NAME} start <id> - start the game
+/${process.env.COMMAND_NAME} assign <id> <name> @<channel>
+/${process.env.COMMAND_NAME} result <id> <name> - find the result of person \`\`\``;
 
 app.message("whoami", async ({ say, context }) => {
   console.log("je;;p", context);
   await say(`User Details: ${JSON.stringify(context.user)}`);
 });
 
-app.command("/gamebot", async ({ ack, body, context, say, command }: any) => {
-  let out;
-  await ack();
-  let textArray = command.text.split(" ");
-  switch (textArray[0]) {
-    case "create":
-      await showGameCreateModal(app, body, context);
-      // TODO: can show a modal for this
-      break;
-    case "start":
-      if (textArray[1]) {
-        out = "Starting in 3..2..1";
-        startGame(textArray[1]);
-      } else {
-        out = "Game does not exist";
-      }
-      break;
-    case "cancel":
-      if (textArray[1]) {
-        out = "Cancelling the game";
-        cancelGame(textArray[1]);
-      } else {
-        out = "Game does not exist";
-      }
-      break;
-    case "help":
-      out = commandsList;
-      break;
-    case "scoreboard":
-      out = getScoreboard("game");
-      break;
-    case "score":
-      out = getUserScore(command.user_id);
-      break;
-    default:
-      out = `<@${command.user_id}> ${command.text}`;
-      break;
+app.command(
+  `/${process.env.COMMAND_NAME}`,
+  async ({ ack, body, context, say, command }: any) => {
+    let out;
+    await ack();
+    let textArray = command.text.split(" ");
+    switch (textArray[0]) {
+      case "create":
+        await showGameCreateModal(app, body, context);
+        // TODO: can show a modal for this
+        break;
+      case "start":
+        if (textArray[1]) {
+          out = "Starting in 3..2..1";
+          startGame(textArray[1]);
+        } else {
+          out = "Game does not exist";
+        }
+        break;
+      case "cancel":
+        if (textArray[1]) {
+          out = "Cancelling the game";
+          cancelGame(textArray[1]);
+        } else {
+          out = "Game does not exist";
+        }
+        break;
+      case "help":
+        out = commandsList;
+        break;
+      case "scoreboard":
+        out = getScoreboard("game");
+        break;
+      case "score":
+        out = getUserScore(command.user_id);
+        break;
+      default:
+        out = `<@${command.user_id}> ${command.text}`;
+        break;
+    }
+    if (out) {
+      await say(`${out}`);
+    }
   }
-  if (out) {
-    await say(`${out}`);
-  }
-});
+);
 
 app.action(
   "add_question",
@@ -180,7 +183,9 @@ app.view(
     let msg = "";
 
     const dataInput = view["state"]["values"];
+
     const quiz = new QuizModel();
+
     Object.entries(dataInput).map((entry) => {
       let key = entry[0];
       let value = getValueFromFormInput(entry[1]);
@@ -190,8 +195,9 @@ app.view(
       } else if (key.startsWith("question_")) {
         const questionObj = new QuestionModel();
         questionObj.question = value;
-        questionObj.answer = "answer";
-
+        questionObj.answer = getValueFromFormInput(
+          dataInput[`answer_${key.split(`question_`)[1]}`]
+        );
         quiz.addQuestion(questionObj);
       }
     });
