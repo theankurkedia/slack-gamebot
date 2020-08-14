@@ -118,7 +118,7 @@ app.message("whoami", async ({ say, context }) => {
   await say(`User Details: ${JSON.stringify(context.user)}`);
 });
 
-app.command("/botsuraj", async ({ ack, body, context, say, command }: any) => {
+app.command("/gamebot", async ({ ack, body, context, say, command }: any) => {
   let out;
   await ack();
   let textArray = command.text.split(" ");
