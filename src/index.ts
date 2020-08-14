@@ -6,6 +6,8 @@ import {
   getUserScore,
   startGame,
   cancelGame,
+  getNextQuestionNumber,
+  addQuestionFieldInModal,
 } from "./actions";
 
 import mongoose from "mongoose";
@@ -115,18 +117,7 @@ app.message("whoami", async ({ say, context }) => {
   await say(`User Details: ${JSON.stringify(context.user)}`);
 });
 
-app.event("app_mention", async ({ context, event }: any) => {
-  try {
-    await app.client.chat.postMessage({
-      token: context.botToken,
-      channel: event.channel,
-      text: `Hey <@${event.user}>, you mentioned me.`,
-    });
-  } catch (e) {
-    console.log(`error responding ${e}`);
-  }
-});
-app.command("/gamebot", async ({ ack, body, context, say, command }: any) => {
+app.command("/game", async ({ ack, body, context, say, command }: any) => {
   let out;
   await ack();
   let textArray = command.text.split(" ");
@@ -168,3 +159,21 @@ app.command("/gamebot", async ({ ack, body, context, say, command }: any) => {
     await say(`${out}`);
   }
 });
+
+app.action(
+  "add_question",
+  async ({ action, ack, context, view, body }: any) => {
+    await ack();
+    let questionNo = getNextQuestionNumber();
+    await addQuestionFieldInModal(app, body, context, questionNo);
+  }
+);
+app.view(
+  "modal_callback_id",
+  async ({ action, ack, context, view, body }: any) => {
+    // Submission of modal
+    await ack();
+
+    console.log("*** 🔥 ssssss", view["state"]["values"]);
+  }
+);
