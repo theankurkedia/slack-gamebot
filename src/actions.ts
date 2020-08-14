@@ -232,7 +232,8 @@ export async function startGame(
   app: App,
   context: Context,
   say: SayFn,
-  name: string
+  name: string,
+  channelName: string
 ) {
   say(
     "Hello everyone!\nLet's start the game.\nThe first question is coming up in 5 seconds."
@@ -260,7 +261,7 @@ export async function startGame(
         const result = await app.client.chat.postMessage({
           // The token you used to initialize your app is stored in the `context` object
           token: context.botToken,
-          channel: "#bot-himanshu",
+          channel: `#${channelName}`,
           text: question.question,
           // blocks: [
           //   {
@@ -292,7 +293,7 @@ export async function startGame(
           await app.client.chat.postMessage({
             // The token you used to initialize your app is stored in the `context` object
             token: context.botToken,
-            channel: "#bot-himanshu",
+            channel: `#${channelName}`,
             text: `Time up :clock1:
 
 ${pointsMessage}
@@ -312,7 +313,7 @@ ${
             await app.client.chat.postMessage({
               // The token you used to initialize your app is stored in the `context` object
               token: context.botToken,
-              channel: "#bot-himanshu",
+              channel: `#${channelName}`,
               text: `
 The winner of ${quiz1.name} is :drum_with_drumsticks: :drum_with_drumsticks: :drum_with_drumsticks:
 
@@ -324,7 +325,7 @@ The winner of ${quiz1.name} is :drum_with_drumsticks: :drum_with_drumsticks: :dr
               await app.client.chat.postMessage({
                 // The token you used to initialize your app is stored in the `context` object
                 token: context.botToken,
-                channel: "#bot-himanshu",
+                channel: `#${channelName}`,
                 text: `<@${winner}> :tada::tada::tada:`,
               });
             }, 3000);
@@ -358,7 +359,7 @@ The winner of ${quiz1.name} is :drum_with_drumsticks: :drum_with_drumsticks: :dr
     // await app.client.chat.postMessage({
     //   // The token you used to initialize your app is stored in the `context` object
     //   token: context.botToken,
-    //   channel: "#bot-himanshu",
+    //   channel: `#${channelName}`,
     //   text: "Button clicked",
     // });
     await say("wdwdwdw");
