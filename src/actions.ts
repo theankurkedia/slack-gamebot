@@ -1,15 +1,18 @@
+import { get } from "lodash";
 export function createGame(name: string) {
   // create a game with the unique id
 }
 
-export function getQuestionAnswerElements(number: number) {
+export function getQuestionAnswerElements(number: number, data?: any) {
   let elements = [];
   for (let i = 0; i < number; i++) {
+    let questionData = get(data, `questions[${i}]`);
     elements.push({
       type: "input",
       block_id: `question_${i + 1}`,
       element: {
         type: "plain_text_input",
+        initial_value: questionData ? questionData.question : undefined,
       },
       label: {
         type: "plain_text",
@@ -22,6 +25,7 @@ export function getQuestionAnswerElements(number: number) {
       block_id: `answer_${i + 1}`,
       element: {
         type: "plain_text_input",
+        initial_value: questionData ? questionData.answer : undefined,
       },
       label: {
         type: "plain_text",
@@ -37,9 +41,10 @@ function getModalView(
   body: any,
   context: any,
   questionNos: number,
-  viewId?: string
+  viewId?: string,
+  data?: any
 ) {
-  const questionElements = getQuestionAnswerElements(questionNos);
+  const questionElements = getQuestionAnswerElements(questionNos, data);
   return {
     token: context.botToken,
     view_id: viewId,
@@ -68,6 +73,7 @@ function getModalView(
           block_id: "quiz_name",
           element: {
             type: "plain_text_input",
+            initial_value: data ? data.name : undefined,
           },
           label: {
             type: "plain_text",
@@ -151,9 +157,23 @@ function getModalView(
     },
   };
 }
-export async function showGameCreateModal(app: any, body: any, context: any) {
+export async function showGameCreateModal(
+  app: any,
+  body: any,
+  context: any,
+  data?: any
+) {
   try {
-    await app.client.views.open(getModalView(app, body, context, 5));
+    await app.client.views.open(
+      getModalView(
+        app,
+        body,
+        context,
+        data ? data.questions.length : 5,
+        undefined,
+        data
+      )
+    );
   } catch (error) {
     console.error(error);
     return null;

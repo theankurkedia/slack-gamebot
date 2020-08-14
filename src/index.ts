@@ -60,7 +60,7 @@ app.message("create test", async ({ say, context }) => {
 
   const quiz = new QuizModel();
   quiz.name = "Test";
-  quiz.save(function(err: any) {
+  quiz.save(function (err: any) {
     if (err) {
       console.log("hello here", err.message);
       say(err.message);
@@ -118,48 +118,64 @@ app.message("whoami", async ({ say, context }) => {
   await say(`User Details: ${JSON.stringify(context.user)}`);
 });
 
-app.command("/gamebot", async ({ ack, body, context, say, command }: any) => {
-  let out;
-  await ack();
-  let textArray = command.text.split(" ");
-  switch (textArray[0]) {
-    case "create":
-      await showGameCreateModal(app, body, context);
-      // TODO: can show a modal for this
-      break;
-    case "start":
-      if (textArray[1]) {
-        out = "Starting in 3..2..1";
-        startGame(textArray[1]);
-      } else {
-        out = "Game does not exist";
-      }
-      break;
-    case "cancel":
-      if (textArray[1]) {
-        out = "Cancelling the game";
-        cancelGame(textArray[1]);
-      } else {
-        out = "Game does not exist";
-      }
-      break;
-    case "help":
-      out = commandsList;
-      break;
-    case "scoreboard":
-      out = getScoreboard("game");
-      break;
-    case "score":
-      out = getUserScore(command.user_id);
-      break;
-    default:
-      out = `<@${command.user_id}> ${command.text}`;
-      break;
+app.command(
+  `/${process.env.BOTNAME}`,
+  async ({ ack, body, context, say, command }: any) => {
+    let out;
+    await ack();
+    let textArray = command.text.split(" ");
+    switch (textArray[0]) {
+      case "create":
+        await showGameCreateModal(app, body, context);
+        // TODO: can show a modal for this
+        break;
+      case "edit":
+        if (textArray[1]) {
+          let data = await QuizModel.find({ name: textArray[1] });
+          if (data && data.length) {
+            await showGameCreateModal(app, body, context, data[0]);
+          } else {
+            out = "Game does not exist";
+          }
+          // startGame(textArray[1]);
+        } else {
+          out = "Please enter game id";
+        }
+        break;
+      case "start":
+        if (textArray[1]) {
+          out = "Starting in 3..2..1";
+          startGame(textArray[1]);
+        } else {
+          out = "Game does not exist";
+        }
+        break;
+      case "cancel":
+        if (textArray[1]) {
+          out = "Cancelling the game";
+          cancelGame(textArray[1]);
+        } else {
+          out = "Game does not exist";
+        }
+        break;
+      case "help":
+        out = commandsList;
+        break;
+      case "scoreboard":
+        out = getScoreboard("game");
+        break;
+      case "score":
+        out = getUserScore(command.user_id);
+        break;
+      default:
+        out = `<@${command.user_id}> ${command.text}`;
+        break;
+    }
+    if (out) {
+      await say(`${out}`);
+    }
   }
-  if (out) {
-    await say(`${out}`);
-  }
-});
+);
 
 app.action(
   "add_question",
@@ -198,7 +214,7 @@ app.view(
 
     // const quizName = getValueFromFormInput(dataInput.quiz_name);
 
-    quiz.save(async function(err: any) {
+    quiz.save(async function (err: any) {
       console.log("*** 🔥 ssssss", dataInput);
 
       if (err) {
