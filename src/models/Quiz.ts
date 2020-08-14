@@ -1,5 +1,5 @@
 import { QuestionModel, QuestionSchema } from "./Question";
-import { ScoreboardSchema } from "./Scoreboard";
+import { ScoreboardSchema, ScoreboardModel } from "./Scoreboard";
 import { forEach } from "lodash";
 
 const mongoose = require("mongoose");
@@ -35,6 +35,20 @@ QuizSchema.methods = {
       questionObj.answer = quesData.answer;
       this.addQuestion(questionObj);
     });
+  },
+
+  updateUserScore: function(userId: any, score: number) {
+    const scoreData = {
+      userId: userId,
+      score: score,
+    };
+    if (!this.scoreboard) {
+      this.scoreboard = new ScoreboardModel();
+    }
+    this.scoreboard.scores.push(scoreData);
+    console.log(this.scoreboard, "hello here");
+
+    this.save();
   },
 };
 

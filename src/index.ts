@@ -116,10 +116,15 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create - create a new g
 /${process.env.COMMAND_NAME} assign <id> <name> @<channel>
 /${process.env.COMMAND_NAME} result <id> <name> - find the result of person \`\`\``;
 
-app.message("whoami", async ({ say, context }) => {
-  console.log("je;;p", context);
-  await say(`User Details: ${JSON.stringify(context.user)}`);
-});
+// app.message("t", async ({ say, context, body }) => {
+//   console.log("je;;p", body);
+//   const user = body.event.user;
+
+//   const quiz = await QuizModel.findOne({ name: 1 });
+
+//   console.log(quiz.updateUserScore(quiz.userId, 10));
+//   await say(`User Details: ${user}`);
+// });
 
 app.command(
   `/${process.env.COMMAND_NAME}`,
@@ -236,7 +241,6 @@ app.view(
     let quizFormData = getQuizFormData(view);
     let quiz = await QuizModel.findOne({ name: quizFormData.name });
 
-    console.log(quiz, body, "heree");
     if (!quiz || quiz.userId !== user) {
       try {
         await app.client.chat.postMessage({
