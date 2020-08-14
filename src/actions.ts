@@ -2,7 +2,7 @@ export function createGame(name: string) {
   // create a game with the unique id
 }
 
-export function getQuestionElements(number: number) {
+export function getQuestionAnswerElements(number: number) {
   let elements = [];
   for (let i = 0; i < number; i++) {
     elements.push({
@@ -17,6 +17,18 @@ export function getQuestionElements(number: number) {
         emoji: true,
       },
     });
+    elements.push({
+      type: "input",
+      block_id: `answer_${i + 1}`,
+      element: {
+        type: "plain_text_input",
+      },
+      label: {
+        type: "plain_text",
+        text: `Answer ${i + 1}`,
+        emoji: true,
+      },
+    });
   }
   return elements;
 }
@@ -27,7 +39,7 @@ function getModalView(
   questionNos: number,
   viewId?: string
 ) {
-  const questionElements = getQuestionElements(questionNos);
+  const questionElements = getQuestionAnswerElements(questionNos);
   return {
     token: context.botToken,
     view_id: viewId,
@@ -76,47 +88,47 @@ function getModalView(
             },
           ],
         },
-        {
-          type: "section",
-          accessory: {
-            type: "static_select",
-            placeholder: {
-              type: "plain_text",
-              text: "Select question item",
-              emoji: true,
-            },
-            options: [
-              {
-                text: {
-                  type: "plain_text",
-                  text: "MCQ",
-                  emoji: true,
-                },
-                value: "answer-type-mcq",
-              },
-              {
-                text: {
-                  type: "plain_text",
-                  text: "Input",
-                  emoji: true,
-                },
-                value: "answer-type-input",
-              },
-              {
-                text: {
-                  type: "plain_text",
-                  text: "Chat",
-                  emoji: true,
-                },
-                value: "answer-type-chat",
-              },
-            ],
-          },
-          text: {
-            type: "mrkdwn",
-            text: " ",
-          },
-        },
+        // {
+        //   type: "section",
+        //   accessory: {
+        //     type: "static_select",
+        //     placeholder: {
+        //       type: "plain_text",
+        //       text: "Select question item",
+        //       emoji: true,
+        //     },
+        //     options: [
+        //       {
+        //         text: {
+        //           type: "plain_text",
+        //           text: "MCQ",
+        //           emoji: true,
+        //         },
+        //         value: "answer-type-mcq",
+        //       },
+        //       {
+        //         text: {
+        //           type: "plain_text",
+        //           text: "Input",
+        //           emoji: true,
+        //         },
+        //         value: "answer-type-input",
+        //       },
+        //       {
+        //         text: {
+        //           type: "plain_text",
+        //           text: "Chat",
+        //           emoji: true,
+        //         },
+        //         value: "answer-type-chat",
+        //       },
+        //     ],
+        //   },
+        //   text: {
+        //     type: "mrkdwn",
+        //     text: " ",
+        //   },
+        // },
         ...questionElements,
         {
           type: "section",
@@ -141,7 +153,7 @@ function getModalView(
 }
 export async function showGameCreateModal(app: any, body: any, context: any) {
   try {
-    await app.client.views.open(getModalView(app, body, context, 3));
+    await app.client.views.open(getModalView(app, body, context, 5));
   } catch (error) {
     console.error(error);
     return null;
