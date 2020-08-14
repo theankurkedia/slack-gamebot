@@ -64,7 +64,7 @@ app.message("create test", async ({ say, context }) => {
 
   const quiz = new QuizModel();
   quiz.name = "Test";
-  quiz.save(function (err: any) {
+  quiz.save(function(err: any) {
     if (err) {
       console.log("hello here", err.message);
       say(err.message);
@@ -117,10 +117,15 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create - create a new g
 /${process.env.COMMAND_NAME} assign <id> <name> @<channel>
 /${process.env.COMMAND_NAME} result <id> <name> - find the result of person \`\`\``;
 
-app.message("whoami", async ({ say, context }) => {
-  console.log("je;;p", context);
-  await say(`User Details: ${JSON.stringify(context.user)}`);
-});
+// app.message("t", async ({ say, context, body }) => {
+//   console.log("je;;p", body);
+//   const user = body.event.user;
+
+//   const quiz = await QuizModel.findOne({ name: 1 });
+
+//   console.log(quiz.updateUserScore(quiz.userId, 10));
+//   await say(`User Details: ${user}`);
+// });
 
 app.command(
   `/${process.env.COMMAND_NAME}`,
@@ -151,10 +156,17 @@ app.command(
         }
         break;
       case "start":
-        if (textArray[1]) {
-          startGame(app, context, say, textArray[1]);
+        // console.log(body, "body here");
+
+        const channelName = body.channel_name;
+        let data = await QuizModel.findOne({ name: textArray[1] });
+        const user = body.user_id;
+
+        // console.log(channelName, body, "channelName");
+        if (data && user === data.userId) {
+          startGame(app, context, say, textArray[1], channelName);
         } else {
-          say("Please mention the name of the game.");
+          say("Game not found!");
         }
         break;
       case "cancel":
@@ -213,7 +225,7 @@ app.view(
     quiz.userId = user;
     quiz.addAllQuestions(quizFormData.questions);
 
-    quiz.save(async function (err: any) {
+    quiz.save(async function(err: any) {
       if (err) {
         msg = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -256,7 +268,7 @@ app.view(
     } else {
       quiz.addAllQuestions(quizFormData.questions);
 
-      quiz.save(async function (err: any) {
+      quiz.save(async function(err: any) {
         if (err) {
           msg = `There was an error with your submission \n \`${err.message}\``;
         } else {

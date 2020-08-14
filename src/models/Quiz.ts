@@ -1,10 +1,13 @@
 import { QuestionModel, QuestionSchema } from "./Question";
-import { ScoreboardSchema } from "./Scoreboard";
+import { ScoreboardSchema, ScoreboardModel } from "./Scoreboard";
 import { forEach } from "lodash";
 
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const Config = new Schema({
+  timePerQuestion: { type: Number, default: 10 },
+});
 /**
  * User Schema
  */
@@ -12,7 +15,7 @@ const Schema = mongoose.Schema;
 const QuizSchema = new Schema({
   name: { type: String, unique: true, required: true },
   userId: { type: String, unique: true, require: true },
-  config: String,
+  config: { type: Config, default: { timePerQuestion: 10 } },
   running: { type: Boolean, default: false },
   channel: { type: String, defautl: "" },
   questions: [QuestionSchema],
@@ -35,6 +38,20 @@ QuizSchema.methods = {
       questionObj.answer = quesData.answer;
       this.addQuestion(questionObj);
     });
+  },
+
+  updateUserScore: function(userId: any, score: number) {
+    const scoreData = {
+      userId: userId,
+      score: score,
+    };
+    if (!this.scoreboard) {
+      this.scoreboard = new ScoreboardModel();
+    }
+    this.scoreboard.scores.push(scoreData);
+    console.log(this.scoreboard, "hello here");
+
+    this.save();
   },
 };
 
