@@ -4,6 +4,7 @@ import quizRunner from "./services/quizRunner";
 import { isNil, get } from "lodash";
 import { QuizModel } from "./models/Quiz";
 import { ScoreboardModel } from "./models/Scoreboard";
+const DEFAULT_QUESTIONS_COUNT = 5;
 
 export function getQuestionAnswerElements(number: number, data?: any) {
   let elements = [];
@@ -43,6 +44,7 @@ function getModalView(
   body: any,
   context: any,
   questionNos: number,
+  newQuiz?: boolean,
   viewId?: string,
   data?: any
 ) {
@@ -53,7 +55,9 @@ function getModalView(
     trigger_id: body.trigger_id,
     view: {
       type: "modal",
-      callback_id: data ? "modal_edit_callback_id" : "modal_create_callback_id",
+      callback_id: newQuiz
+        ? "modal_create_callback_id"
+        : "modal_edit_callback_id",
       title: {
         type: "plain_text",
         text: "Create Game",
@@ -171,7 +175,8 @@ export async function showGameEditModal(
         app,
         body,
         context,
-        data ? data.questions.length : 5,
+        data ? data.questions.length : DEFAULT_QUESTIONS_COUNT,
+        false,
         undefined,
         data
       )
@@ -193,7 +198,8 @@ export async function showGameCreateModal(
         app,
         body,
         context,
-        data ? data.questions.length : 5,
+        data ? data.questions.length : DEFAULT_QUESTIONS_COUNT,
+        true,
         undefined,
         data
       )
@@ -207,11 +213,13 @@ export async function addQuestionFieldInModal(
   app: any,
   body: any,
   context: any,
-  questionNos: number
+  questionNos: number,
+  newQuiz: boolean,
+  data: any
 ) {
   try {
     await app.client.views.update(
-      getModalView(app, body, context, questionNos, body.view.id)
+      getModalView(app, body, context, questionNos, newQuiz, body.view.id, data)
     );
   } catch (error) {
     console.error(error);
@@ -285,7 +293,7 @@ export async function startGame(
             // The token you used to initialize your app is stored in the `context` object
             token: context.botToken,
             channel: "#bot-himanshu",
-            text: `Time up :clock1: 
+            text: `Time up :clock1:
 
 ${pointsMessage}
 The correct answer was \`${question.answer}\`.
@@ -306,10 +314,10 @@ ${formattedScoreboard}
               token: context.botToken,
               channel: "#bot-himanshu",
               text: `
-The winner of ${quiz1.name} is :drum_with_drumsticks: :drum_with_drumsticks: :drum_with_drumsticks: 
-            
- 
-              
+The winner of ${quiz1.name} is :drum_with_drumsticks: :drum_with_drumsticks: :drum_with_drumsticks:
+
+
+
             `,
             });
             setTimeout(async () => {
@@ -381,7 +389,7 @@ export function cancelGame(name: string) {
   // cancel game
 }
 
-let index = 3;
+let index = DEFAULT_QUESTIONS_COUNT;
 export function getNextQuestionNumber() {
   return ++index;
 }
