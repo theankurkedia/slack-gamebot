@@ -2,14 +2,21 @@ require("dotenv").config();
 import { App } from "@slack/bolt";
 import {
   showGameCreateModal,
+  showGameEditModal,
   getScoreboard,
   getUserScore,
   startGame,
   cancelGame,
+  getNextQuestionNumber,
+  addQuestionFieldInModal,
 } from "./actions";
 
 import mongoose from "mongoose";
 import { QuestionModel } from "./models/Question";
+import { QuizModel } from "./models/Quiz";
+import { getValueFromFormInput } from "./utils";
+import { forEach } from "lodash";
+import { getQuizFormData } from "./getQuizFormData";
 
 const uri: any = process.env.MONGODB_URI;
 mongoose
@@ -19,17 +26,22 @@ mongoose
   })
   .then(() => {
     console.log("connected");
-    // const instance = new QuestionModel();
-    // instance.question = "hello";
-    // instance.save(function(err: any) {
-    //   //
-    // });
 
     // console.log(instance);
   })
   .catch((err: any) => {
     console.log("error in connection", err);
   });
+
+// instance.name = "hello";
+
+// const question = new QuestionModel();
+// question.question = "How are you?";
+// instance.questions = [question];
+
+// instance.save(function(err: any) {
+//   //
+// });
 
 // const m = new MyModel();
 // m.save();
@@ -46,67 +58,214 @@ const app = new App({
   console.log("⚡️ Bolt app is running!");
 })();
 
-const commandsList = `\`\`\`/gamebot create - create a new game
-/gamebot cancel <id> - cancel the creation of game
-/gamebot help  - list out the commands
-/gamebot start <id> - start the game
-/gamebot assign <id> <name> @<channel>
-/gamebot result <id> <name> - find the result of person \`\`\``;
+app.message("create test", async ({ say, context }) => {
+  console.log(context);
+
+  const quiz = new QuizModel();
+  quiz.name = "Test";
+  quiz.save(function (err: any) {
+    if (err) {
+      console.log("hello here", err.message);
+      say(err.message);
+    } else {
+      say("Quiz created successfully");
+    }
+  });
+});
+
+// app.command("/botsuraj", async ({ ack, body, say, context }) => {
+//   await ack();
+//   const quiz = await QuizModel.find({});
+//   if (quiz) {
+//     console.log(quiz);
+//     await say(`Quiz with name ${body.text} found`);
+//   } else {
+//     await say("Sorry, Invalid command");
+//   }
+//   // const quiz = new QuizModel();
+//   // quiz.name = "Test";
+//   // quiz.save(function(err: any) {
+//   //   if (err) {
+//   //     console.log("hello here", err.message);
+//   //     say(err.message);
+//   //   } else {
+//   //     say("Quiz created successfully");
+//   //   }
+//   // });
+// });
+
+// app.command("/botsuraj", async ({ ack, body, say, context }) => {
+//   console.log("jello here", context, body);
+
+//   await say("Quiz created successfully");
+//   // const quiz = new QuizModel();
+//   // quiz.name = "Test";
+//   // quiz.save(function(err: any) {
+//   //   if (err) {
+//   //     console.log("hello here", err.message);
+//   //     say(err.message);
+//   //   } else {
+//   //     say("Quiz created successfully");
+//   //   }
+//   // });
+// });
+const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create - create a new game
+/${process.env.COMMAND_NAME} cancel <id> - cancel the creation of game
+/${process.env.COMMAND_NAME} help  - list out the commands
+/${process.env.COMMAND_NAME} start <id> - start the game
+/${process.env.COMMAND_NAME} assign <id> <name> @<channel>
+/${process.env.COMMAND_NAME} result <id> <name> - find the result of person \`\`\``;
 
 app.message("whoami", async ({ say, context }) => {
   console.log("je;;p", context);
   await say(`User Details: ${JSON.stringify(context.user)}`);
 });
 
-app.event("app_mention", async ({ context, event }: any) => {
-  try {
-    await app.client.chat.postMessage({
-      token: context.botToken,
-      channel: event.channel,
-      text: `Hey <@${event.user}>, you mentioned me.`,
+app.command(
+  `/${process.env.COMMAND_NAME}`,
+  async ({ ack, body, context, say, command }) => {
+    let out;
+    await ack();
+    let textArray = command.text.split(" ");
+    switch (textArray[0]) {
+      case "create":
+        await showGameCreateModal(app, body, context);
+        // TODO: can show a modal for this
+        break;
+      case "edit":
+        if (textArray[1]) {
+          let data = await QuizModel.findOne({ name: textArray[1] });
+          const user = body.user_id;
+          console.log("jello ", user, data.userId);
+          if (data && user === data.userId) {
+            await showGameEditModal(app, body, context, data);
+          } else {
+            out = "Game does not exist";
+          }
+        } else {
+          out = "Please enter game id";
+        }
+        break;
+      case "start":
+        if (textArray[1]) {
+          startGame(app, context, say, textArray[1]);
+        } else {
+          say("Please mention the name of the game.");
+        }
+        break;
+      case "cancel":
+        if (textArray[1]) {
+          out = "Cancelling the game";
+          cancelGame(textArray[1]);
+        } else {
+          out = "Game does not exist";
+        }
+        break;
+      case "help":
+        out = commandsList;
+        break;
+      case "scoreboard":
+        out = getScoreboard("game");
+        break;
+      case "score":
+        out = getUserScore(command.user_id);
+        break;
+      default:
+        out = `<@${command.user_id}> ${command.text}`;
+        break;
+    }
+    if (out) {
+      await say(`${out}`);
+    }
+  }
+);
+
+app.action(
+  "add_question",
+  async ({ action, ack, context, view, body }: any) => {
+    await ack();
+    let questionNo = getNextQuestionNumber();
+    await addQuestionFieldInModal(app, body, context, questionNo);
+  }
+);
+
+app.view(
+  "modal_create_callback_id",
+  async ({ action, ack, context, view, body, say }: any) => {
+    // Submission of modal
+    await ack();
+    const user = body["user"]["id"];
+
+    console.log(user, "hello user");
+    let msg = "";
+    let quizFormData = getQuizFormData(view);
+    let quiz = new QuizModel();
+    quiz.name = quizFormData.name;
+    quiz.userId = user;
+    quiz.addAllQuestions(quizFormData.questions);
+
+    quiz.save(async function (err: any) {
+      if (err) {
+        msg = `There was an error with your submission \n \`${err.message}\``;
+      } else {
+        msg = "Your submission was successful";
+      }
+      // Message the user
+      try {
+        await app.client.chat.postMessage({
+          token: context.botToken,
+          channel: user,
+          text: msg,
+        });
+      } catch (error) {
+        console.error(error);
+      }
     });
-  } catch (e) {
-    console.log(`error responding ${e}`);
   }
-});
-app.command("/gamebot", async ({ ack, body, context, say, command }) => {
-  let out;
-  await ack();
-  let textArray = command.text.split(" ");
-  switch (textArray[0]) {
-    case "create":
-      await showGameCreateModal(app, body, context);
-      // TODO: can show a modal for this
-      break;
-    case "start":
-      if (textArray[1]) {
-        startGame(app, context, say, textArray[1]);
-      } else {
-        say("Please mention the name of the game.");
+);
+
+app.view(
+  "modal_edit_callback_id",
+  async ({ action, ack, context, view, body, say }: any) => {
+    // Submission of modal
+    await ack();
+    const user = body["user"]["id"];
+    let msg = "";
+
+    let quizFormData = getQuizFormData(view);
+    let quiz = await QuizModel.findOne({ name: quizFormData.name });
+
+    console.log(quiz, body, "heree");
+    if (!quiz || quiz.userId !== user) {
+      try {
+        await app.client.chat.postMessage({
+          token: context.botToken,
+          channel: user,
+          text: "Quiz not found",
+        });
+      } catch (error) {
+        console.error(error);
       }
-      break;
-    case "cancel":
-      if (textArray[1]) {
-        out = "Cancelling the game";
-        cancelGame(textArray[1]);
-      } else {
-        out = "Game does not exist";
-      }
-      break;
-    case "help":
-      out = commandsList;
-      break;
-    case "scoreboard":
-      out = getScoreboard("game");
-      break;
-    case "score":
-      out = getUserScore(command.user_id);
-      break;
-    default:
-      out = `<@${command.user_id}> ${command.text}`;
-      break;
+    } else {
+      quiz.addAllQuestions(quizFormData.questions);
+
+      quiz.save(async function (err: any) {
+        if (err) {
+          msg = `There was an error with your submission \n \`${err.message}\``;
+        } else {
+          msg = "Your submission was successful";
+        }
+        // Message the user
+        try {
+          await app.client.chat.postMessage({
+            token: context.botToken,
+            channel: user,
+            text: msg,
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      });
+    }
   }
-  if (out) {
-    await say(`${out}`);
-  }
-});
+);
