@@ -169,7 +169,7 @@ export async function showGameCreateModal(
         app,
         body,
         context,
-        data ? data.questions.length : 5,
+        data ? data.questions.length : 2,
         undefined,
         data
       )

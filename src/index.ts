@@ -14,6 +14,7 @@ import mongoose from "mongoose";
 import { QuestionModel } from "./models/Question";
 import { QuizModel } from "./models/Quiz";
 import { getValueFromFormInput } from "./utils";
+import { forEach } from "lodash";
 
 const uri: any = process.env.MONGODB_URI;
 mongoose
@@ -60,7 +61,7 @@ app.message("create test", async ({ say, context }) => {
 
   const quiz = new QuizModel();
   quiz.name = "Test";
-  quiz.save(function (err: any) {
+  quiz.save(function(err: any) {
     if (err) {
       console.log("hello here", err.message);
       say(err.message);
@@ -192,32 +193,59 @@ app.view(
     // Submission of modal
     await ack();
 
+    console.log(body, "hello here");
     const user = body["user"]["id"];
     let msg = "";
 
     const dataInput = view["state"]["values"];
 
-    const quiz = new QuizModel();
+    const quizObject: any = {
+      name: "",
+      questions: [],
+    };
 
     Object.entries(dataInput).map((entry) => {
       let key = entry[0];
       let value = getValueFromFormInput(entry[1]);
 
       if (key === "quiz_name") {
-        quiz.name = value;
+        // quiz.name = value;
+        quizObject.name = value;
       } else if (key.startsWith("question_")) {
-        const questionObj = new QuestionModel();
-        questionObj.question = value;
-        questionObj.answer = getValueFromFormInput(
-          dataInput[`answer_${key.split(`question_`)[1]}`]
-        );
-        quiz.addQuestion(questionObj);
+        quizObject.questions.push({
+          question: value,
+          answer: getValueFromFormInput(
+            dataInput[`answer_${key.split(`question_`)[1]}`]
+          ),
+        });
+        // const questionObj = new QuestionModel();
+        // questionObj.question = value;
+        // questionObj.answer = getValueFromFormInput(
+        //   dataInput[`answer_${key.split(`question_`)[1]}`]
+        // );
+        // quiz.addQuestion(questionObj);
       }
     });
 
+    let quiz = await QuizModel.findOne({ name: quizObject.name });
+
+    console.log(quiz, "quiz here");
+    if (!quiz) {
+      quiz = new QuizModel();
+      quiz.name = quizObject.name;
+    } else {
+      quiz.questions = [];
+    }
+
+    forEach(quizObject.questions, (quesData) => {
+      const questionObj = new QuestionModel();
+      questionObj.question = quesData.question;
+      questionObj.answer = quesData.answer;
+      quiz.addQuestion(questionObj);
+    });
     // const quizName = getValueFromFormInput(dataInput.quiz_name);
 
-    quiz.save(async function (err: any) {
+    quiz.save(async function(err: any) {
       console.log("*** 🔥 ssssss", dataInput);
 
       if (err) {
