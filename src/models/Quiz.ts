@@ -5,6 +5,9 @@ import { forEach } from "lodash";
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const Config = new Schema({
+  timePerQuestion: { type: Number, default: 10 },
+});
 /**
  * User Schema
  */
@@ -12,7 +15,7 @@ const Schema = mongoose.Schema;
 const QuizSchema = new Schema({
   name: { type: String, unique: true, required: true },
   userId: { type: String, unique: true, require: true },
-  config: String,
+  config: { type: Config, default: { timePerQuestion: 10 } },
   running: { type: Boolean, default: false },
   channel: { type: String, defautl: "" },
   questions: [QuestionSchema],

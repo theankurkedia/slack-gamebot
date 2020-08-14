@@ -2,6 +2,8 @@ import ScoreBoard from "./models/ScoreboardTemp";
 import { App, Context, SayFn } from "@slack/bolt";
 import quizRunner from "./services/quizRunner";
 import { isNil, get } from "lodash";
+import { QuizModel } from "./models/Quiz";
+import { ScoreboardModel } from "./models/Scoreboard";
 
 export function getQuestionAnswerElements(number: number, data?: any) {
   let elements = [];
@@ -227,40 +229,18 @@ export async function startGame(
   say(
     "Hello everyone!\nLet's start the game.\nThe first question is coming up in 5 seconds."
   );
-  const quiz1 = {
-    name: "quiz1",
 
-    config: {
-      // schedule info for slack
-      timePerQuestion: 10,
-    },
-    running: false,
-    // channel: "string",
-    questions: [
-      {
-        question: "Question question question?",
-        questionType: "string",
-        // options: ["pomegrenate", "banana", "apple", "potato"],
-        answer: "answer",
-        answerType: "chat",
-      },
-      {
-        question: "Question question question?",
-        questionType: "string",
-        // options: ["pomegrenate", "banana", "apple", "potato"],
-        answer: "answer",
-        answerType: "chat",
-      },
-      {
-        question: "Question question question?",
-        questionType: "string",
-        // options: ["pomegrenate", "banana", "apple", "potato"],
-        answer: "answer",
-        answerType: "chat",
-      },
-    ],
-    scoreboard: new ScoreBoard(),
-  };
+  let quiz1 = await QuizModel.findOne({ name });
+  // if (!quiz1) {
+  //   //
+  // }
+  console.log(quiz1.config, "hello quiz");
+
+  // quiz1 = {
+  //   ...quiz1,
+  //   scoreboard: new ScoreBoard(),
+  // };
+  const scoreboard = new ScoreBoard();
 
   // start game
 
@@ -296,8 +276,8 @@ export async function startGame(
         expectedAnswer = question.answer;
       },
       postScoreboard: async (question: any, index: number) => {
-        const scoreboard = quiz1.scoreboard.getFormattedScoreboard();
-        if (scoreboard) {
+        const formattedScoreboard = scoreboard.getFormattedScoreboard();
+        if (formattedScoreboard) {
           const pointsMessage = userAwardedPointForThisRound
             ? `<@${userAwardedPointForThisRound}> gets this one. `
             : `Oops! Looks like no one got this one. `;
@@ -315,12 +295,12 @@ ${
     ? "This is the final scoreboard!"
     : "Here's the scoreboard:"
 }
-${scoreboard}
+${formattedScoreboard}
  
 `,
           });
           if (index === quiz1.questions.length - 1) {
-            const winner = quiz1.scoreboard.getWinner();
+            const winner = scoreboard.getWinner();
             await app.client.chat.postMessage({
               // The token you used to initialize your app is stored in the `context` object
               token: context.botToken,
@@ -351,13 +331,13 @@ The winner of ${quiz1.name} is :drum_with_drumsticks: :drum_with_drumsticks: :dr
     app.message(/^.*/, async ({ message, say }) => {
       if (expectedAnswer === message.text && !userAwardedPointForThisRound) {
         // await say(`Hello, <@${message.user}>\nBilkul sahi jawab!!!:tada:`);
-        const existingUserScore = quiz1.scoreboard.getUserScore(message.user);
+        const existingUserScore = scoreboard.getUserScore(message.user);
         console.log(existingUserScore, "existingUserScore");
         if (isNil(existingUserScore)) {
-          quiz1.scoreboard.setUserScore(message.user, 1);
+          scoreboard.setUserScore(message.user, 1);
           console.log("setting 0 score");
         } else {
-          quiz1.scoreboard.setUserScore(message.user, existingUserScore + 1);
+          scoreboard.setUserScore(message.user, existingUserScore + 1);
           console.log("setting score ", existingUserScore + 1);
         }
         userAwardedPointForThisRound = message.user;

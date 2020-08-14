@@ -63,7 +63,7 @@ app.message("create test", async ({ say, context }) => {
 
   const quiz = new QuizModel();
   quiz.name = "Test";
-  quiz.save(function (err: any) {
+  quiz.save(function(err: any) {
     if (err) {
       console.log("hello here", err.message);
       say(err.message);
@@ -152,10 +152,13 @@ app.command(
         }
         break;
       case "start":
-        if (textArray[1]) {
+        let data = await QuizModel.findOne({ name: textArray[1] });
+        const user = body.user_id;
+
+        if (data && user === data.userId) {
           startGame(app, context, say, textArray[1]);
         } else {
-          say("Please mention the name of the game.");
+          say("Game not found!");
         }
         break;
       case "cancel":
@@ -209,7 +212,7 @@ app.view(
     quiz.userId = user;
     quiz.addAllQuestions(quizFormData.questions);
 
-    quiz.save(async function (err: any) {
+    quiz.save(async function(err: any) {
       if (err) {
         msg = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -253,7 +256,7 @@ app.view(
     } else {
       quiz.addAllQuestions(quizFormData.questions);
 
-      quiz.save(async function (err: any) {
+      quiz.save(async function(err: any) {
         if (err) {
           msg = `There was an error with your submission \n \`${err.message}\``;
         } else {
