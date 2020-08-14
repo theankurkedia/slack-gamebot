@@ -14,7 +14,7 @@ const QuizSchema = new Schema({
   running: { type: Boolean, default: false },
   channel: { type: String, defautl: "" },
   questions: [QuestionSchema],
-  scoreboard: [ScoreboardSchema],
+  scoreboard: ScoreboardSchema,
 });
 
 QuizSchema.methods = {

@@ -13,6 +13,7 @@ import {
 import mongoose from "mongoose";
 import { QuestionModel } from "./models/Question";
 import { QuizModel } from "./models/Quiz";
+import { getValueFromFormInput } from "./utils";
 
 const uri: any = process.env.MONGODB_URI;
 mongoose
@@ -69,26 +70,26 @@ app.message("create test", async ({ say, context }) => {
   });
 });
 
-app.command("/botsuraj", async ({ ack, body, say, context }) => {
-  await ack();
-  const quiz = await QuizModel.find({});
-  if (quiz) {
-    console.log(quiz);
-    await say(`Quiz with name ${body.text} found`);
-  } else {
-    await say("Sorry, Invalid command");
-  }
-  // const quiz = new QuizModel();
-  // quiz.name = "Test";
-  // quiz.save(function(err: any) {
-  //   if (err) {
-  //     console.log("hello here", err.message);
-  //     say(err.message);
-  //   } else {
-  //     say("Quiz created successfully");
-  //   }
-  // });
-});
+// app.command("/botsuraj", async ({ ack, body, say, context }) => {
+//   await ack();
+//   const quiz = await QuizModel.find({});
+//   if (quiz) {
+//     console.log(quiz);
+//     await say(`Quiz with name ${body.text} found`);
+//   } else {
+//     await say("Sorry, Invalid command");
+//   }
+//   // const quiz = new QuizModel();
+//   // quiz.name = "Test";
+//   // quiz.save(function(err: any) {
+//   //   if (err) {
+//   //     console.log("hello here", err.message);
+//   //     say(err.message);
+//   //   } else {
+//   //     say("Quiz created successfully");
+//   //   }
+//   // });
+// });
 
 // app.command("/botsuraj", async ({ ack, body, say, context }) => {
 //   console.log("jello here", context, body);
@@ -117,7 +118,7 @@ app.message("whoami", async ({ say, context }) => {
   await say(`User Details: ${JSON.stringify(context.user)}`);
 });
 
-app.command("/game", async ({ ack, body, context, say, command }: any) => {
+app.command("/botsuraj", async ({ ack, body, context, say, command }: any) => {
   let out;
   await ack();
   let textArray = command.text.split(" ");
@@ -168,12 +169,66 @@ app.action(
     await addQuestionFieldInModal(app, body, context, questionNo);
   }
 );
+
 app.view(
   "modal_callback_id",
-  async ({ action, ack, context, view, body }: any) => {
+  async ({ action, ack, context, view, body, say }: any) => {
     // Submission of modal
     await ack();
 
-    console.log("*** 🔥 ssssss", view["state"]["values"]);
+    const user = body["user"]["id"];
+    let msg = "";
+
+    const dataInput = view["state"]["values"];
+    const quiz = new QuizModel();
+    Object.entries(dataInput).map((entry) => {
+      let key = entry[0];
+      let value = getValueFromFormInput(entry[1]);
+
+      if (key === "quiz_name") {
+        quiz.name = value;
+      } else if (key.startsWith("question_")) {
+        const questionObj = new QuestionModel();
+        questionObj.question = value;
+        questionObj.answer = "answer";
+
+        quiz.addQuestion(questionObj);
+      }
+    });
+
+    // const quizName = getValueFromFormInput(dataInput.quiz_name);
+
+    quiz.save(async function(err: any) {
+      console.log("*** 🔥 ssssss", dataInput);
+
+      if (err) {
+        console.log("hello here", err.message);
+        msg = `There was an error with your submission \n \`${err.message}\``;
+        // say(err.message);
+      } else {
+        // console.log("*** 🔥 ssssss", dataInput);
+        msg = "Your submission was successful";
+
+        // say("Quiz created successfully");
+      }
+
+      // if (results) {
+      //   // DB save was successful
+      //   msg = 'Your submission was successful';
+      // } else {
+      //   msg = 'There was an error with your submission';
+      // }
+
+      // Message the user
+      try {
+        await app.client.chat.postMessage({
+          token: context.botToken,
+          channel: user,
+          text: msg,
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    });
   }
 );

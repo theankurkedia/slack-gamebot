@@ -6,11 +6,11 @@ const Schema = mongoose.Schema;
  */
 
 export const QuestionSchema = new Schema({
-  question: String,
-  questionType: String,
-  options: String,
-  answer: String,
-  answerType: String,
+  question: { type: String, required: true },
+  questionType: { type: String, default: "text" },
+  options: { type: Array, default: [] },
+  answer: { type: String, required: true },
+  answerType: { type: String, default: "text" },
 });
 // a setter
 // QuestionSchema.path("question").set(function(question: any) {
