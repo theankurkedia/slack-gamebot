@@ -3,7 +3,11 @@ import { App, Context, SayFn } from "@slack/bolt";
 import quizRunner from "./services/quizRunner";
 import { isNil, get } from "lodash";
 const DEFAULT_QUESTIONS_COUNT = 5;
+let questionCount: number = -1;
 
+export function setExistingQuestionCount(count: number) {
+  questionCount = count;
+}
 export function getQuestionAnswerElements(number: number, data?: any) {
   let elements = [];
   for (let i = 0; i < number; i++) {
@@ -58,7 +62,7 @@ function getModalView(
         : "modal_edit_callback_id",
       title: {
         type: "plain_text",
-        text: "Create Game",
+        text: newQuiz ? "Create Game" : "Edit Game",
         emoji: false,
       },
       submit: {
@@ -184,23 +188,10 @@ export async function showGameEditModal(
     return null;
   }
 }
-export async function showGameCreateModal(
-  app: any,
-  body: any,
-  context: any,
-  data?: any
-) {
+export async function showGameCreateModal(app: any, body: any, context: any) {
   try {
     await app.client.views.open(
-      getModalView(
-        app,
-        body,
-        context,
-        data ? data.questions.length : DEFAULT_QUESTIONS_COUNT,
-        true,
-        undefined,
-        data
-      )
+      getModalView(app, body, context, DEFAULT_QUESTIONS_COUNT, true, undefined)
     );
   } catch (error) {
     console.error(error);
@@ -409,9 +400,8 @@ export function cancelGame(name: string) {
   // cancel game
 }
 
-let index = DEFAULT_QUESTIONS_COUNT;
 export function getNextQuestionNumber() {
-  return ++index;
+  return questionCount ? ++questionCount : DEFAULT_QUESTIONS_COUNT + 1;
 }
 export function addQuestion(type: string) {
   // sets the game type
