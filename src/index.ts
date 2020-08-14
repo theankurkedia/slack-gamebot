@@ -63,7 +63,7 @@ app.message("create test", async ({ say, context }) => {
 
   const quiz = new QuizModel();
   quiz.name = "Test";
-  quiz.save(function(err: any) {
+  quiz.save(function (err: any) {
     if (err) {
       console.log("hello here", err.message);
       say(err.message);
@@ -128,7 +128,7 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create - create a new g
 
 app.command(
   `/${process.env.COMMAND_NAME}`,
-  async ({ ack, body, context, say, command }: any) => {
+  async ({ ack, body, context, say, command }) => {
     let out;
     await ack();
     let textArray = command.text.split(" ");
@@ -153,10 +153,9 @@ app.command(
         break;
       case "start":
         if (textArray[1]) {
-          out = "Starting in 3..2..1";
-          startGame(textArray[1]);
+          startGame(app, context, say, textArray[1]);
         } else {
-          out = "Game does not exist";
+          say("Please mention the name of the game.");
         }
         break;
       case "cancel":
@@ -210,7 +209,7 @@ app.view(
     quiz.userId = user;
     quiz.addAllQuestions(quizFormData.questions);
 
-    quiz.save(async function(err: any) {
+    quiz.save(async function (err: any) {
       if (err) {
         msg = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -254,7 +253,7 @@ app.view(
     } else {
       quiz.addAllQuestions(quizFormData.questions);
 
-      quiz.save(async function(err: any) {
+      quiz.save(async function (err: any) {
         if (err) {
           msg = `There was an error with your submission \n \`${err.message}\``;
         } else {
