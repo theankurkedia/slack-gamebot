@@ -15,6 +15,8 @@ import mongoose from "mongoose";
 import { QuestionModel } from "./models/Question";
 import { QuizModel } from "./models/Quiz";
 import { getValueFromFormInput } from "./utils";
+import { forEach } from "lodash";
+import { getQuizFormData } from "./getQuizFormData";
 
 const uri: any = process.env.MONGODB_URI;
 mongoose
@@ -61,7 +63,7 @@ app.message("create test", async ({ say, context }) => {
 
   const quiz = new QuizModel();
   quiz.name = "Test";
-  quiz.save(function (err: any) {
+  quiz.save(function(err: any) {
     if (err) {
       console.log("hello here", err.message);
       say(err.message);
@@ -132,9 +134,11 @@ app.command(
         break;
       case "edit":
         if (textArray[1]) {
-          let data = await QuizModel.find({ name: textArray[1] });
-          if (data && data.length) {
-            await showGameEditModal(app, body, context, data[0]);
+          let data = await QuizModel.findOne({ name: textArray[1] });
+          const user = body.user_id;
+          console.log("jello ", user, data.userId);
+          if (data && user === data.userId) {
+            await showGameEditModal(app, body, context, data);
           } else {
             out = "Game does not exist";
           }
@@ -191,53 +195,22 @@ app.view(
   async ({ action, ack, context, view, body, say }: any) => {
     // Submission of modal
     await ack();
-
     const user = body["user"]["id"];
+
+    console.log(user, "hello user");
     let msg = "";
+    let quizFormData = getQuizFormData(view);
+    let quiz = new QuizModel();
+    quiz.name = quizFormData.name;
+    quiz.userId = user;
+    quiz.addAllQuestions(quizFormData.questions);
 
-    const dataInput = view["state"]["values"];
-
-    const quiz = new QuizModel();
-
-    Object.entries(dataInput).map((entry) => {
-      let key = entry[0];
-      let value = getValueFromFormInput(entry[1]);
-
-      if (key === "quiz_name") {
-        quiz.name = value;
-      } else if (key.startsWith("question_")) {
-        const questionObj = new QuestionModel();
-        questionObj.question = value;
-        questionObj.answer = getValueFromFormInput(
-          dataInput[`answer_${key.split(`question_`)[1]}`]
-        );
-        quiz.addQuestion(questionObj);
-      }
-    });
-
-    // const quizName = getValueFromFormInput(dataInput.quiz_name);
-
-    quiz.save(async function (err: any) {
-      console.log("*** 🔥 ssssss", dataInput);
-
+    quiz.save(async function(err: any) {
       if (err) {
-        console.log("hello here", err.message);
         msg = `There was an error with your submission \n \`${err.message}\``;
-        // say(err.message);
       } else {
-        // console.log("*** 🔥 ssssss", dataInput);
         msg = "Your submission was successful";
-
-        // say("Quiz created successfully");
       }
-
-      // if (results) {
-      //   // DB save was successful
-      //   msg = 'Your submission was successful';
-      // } else {
-      //   msg = 'There was an error with your submission';
-      // }
-
       // Message the user
       try {
         await app.client.chat.postMessage({
@@ -249,5 +222,51 @@ app.view(
         console.error(error);
       }
     });
+  }
+);
+
+app.view(
+  "modal_edit_callback_id",
+  async ({ action, ack, context, view, body, say }: any) => {
+    // Submission of modal
+    await ack();
+    const user = body["user"]["id"];
+    let msg = "";
+
+    let quizFormData = getQuizFormData(view);
+    let quiz = await QuizModel.findOne({ name: quizFormData.name });
+
+    console.log(quiz, body, "heree");
+    if (!quiz || quiz.userId !== user) {
+      try {
+        await app.client.chat.postMessage({
+          token: context.botToken,
+          channel: user,
+          text: "Quiz not found",
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    } else {
+      quiz.addAllQuestions(quizFormData.questions);
+
+      quiz.save(async function(err: any) {
+        if (err) {
+          msg = `There was an error with your submission \n \`${err.message}\``;
+        } else {
+          msg = "Your submission was successful";
+        }
+        // Message the user
+        try {
+          await app.client.chat.postMessage({
+            token: context.botToken,
+            channel: user,
+            text: msg,
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      });
+    }
   }
 );
