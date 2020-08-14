@@ -151,11 +151,15 @@ app.command(
         }
         break;
       case "start":
+        // console.log(body, "body here");
+
+        const channelName = body.channel_name;
         let data = await QuizModel.findOne({ name: textArray[1] });
         const user = body.user_id;
 
+        // console.log(channelName, body, "channelName");
         if (data && user === data.userId) {
-          startGame(app, context, say, textArray[1]);
+          startGame(app, context, say, textArray[1], channelName);
         } else {
           say("Game not found!");
         }
