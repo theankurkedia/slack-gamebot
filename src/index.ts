@@ -15,7 +15,7 @@ import mongoose from "mongoose";
 import { QuestionModel } from "./models/Question";
 import { QuizModel } from "./models/Quiz";
 import { getValueFromFormInput } from "./utils";
-import { forEach } from "lodash";
+import { forEach, get } from "lodash";
 import { getQuizFormData } from "./getQuizFormData";
 
 const uri: any = process.env.MONGODB_URI;
@@ -63,7 +63,7 @@ app.message("create test", async ({ say, context }) => {
 
   const quiz = new QuizModel();
   quiz.name = "Test";
-  quiz.save(function(err: any) {
+  quiz.save(function (err: any) {
     if (err) {
       console.log("hello here", err.message);
       say(err.message);
@@ -136,7 +136,6 @@ app.command(
         if (textArray[1]) {
           let data = await QuizModel.findOne({ name: textArray[1] });
           const user = body.user_id;
-          console.log("jello ", user, data.userId);
           if (data && user === data.userId) {
             await showGameEditModal(app, body, context, data);
           } else {
@@ -181,23 +180,28 @@ app.command(
   }
 );
 
-app.action(
-  "add_question",
-  async ({ action, ack, context, view, body }: any) => {
-    await ack();
-    let questionNo = getNextQuestionNumber();
-    await addQuestionFieldInModal(app, body, context, questionNo);
-  }
-);
+app.action("add_question", async ({ ack, context, body }: any) => {
+  await ack();
+  let quizFormData = getQuizFormData(body["view"]);
+  // console.log("*** 🔥 quizFormData", context, view, body);
+  let questionNo = getNextQuestionNumber();
+  await addQuestionFieldInModal(
+    app,
+    body,
+    context,
+    questionNo,
+    get(body, "view.callback_id") === "modal_create_callback_id",
+    quizFormData
+  );
+});
 
 app.view(
   "modal_create_callback_id",
-  async ({ action, ack, context, view, body, say }: any) => {
+  async ({ ack, context, view, body }: any) => {
     // Submission of modal
     await ack();
     const user = body["user"]["id"];
 
-    console.log(user, "hello user");
     let msg = "";
     let quizFormData = getQuizFormData(view);
     let quiz = new QuizModel();
@@ -205,7 +209,7 @@ app.view(
     quiz.userId = user;
     quiz.addAllQuestions(quizFormData.questions);
 
-    quiz.save(async function(err: any) {
+    quiz.save(async function (err: any) {
       if (err) {
         msg = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -232,11 +236,10 @@ app.view(
     await ack();
     const user = body["user"]["id"];
     let msg = "";
-
+    console.log("edit", view);
     let quizFormData = getQuizFormData(view);
     let quiz = await QuizModel.findOne({ name: quizFormData.name });
 
-    console.log(quiz, body, "heree");
     if (!quiz || quiz.userId !== user) {
       try {
         await app.client.chat.postMessage({
@@ -250,7 +253,7 @@ app.view(
     } else {
       quiz.addAllQuestions(quizFormData.questions);
 
-      quiz.save(async function(err: any) {
+      quiz.save(async function (err: any) {
         if (err) {
           msg = `There was an error with your submission \n \`${err.message}\``;
         } else {
