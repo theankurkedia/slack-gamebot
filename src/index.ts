@@ -2,6 +2,7 @@ require("dotenv").config();
 import { App } from "@slack/bolt";
 import {
   showGameCreateModal,
+  showGameEditModal,
   getScoreboard,
   getUserScore,
   startGame,
@@ -133,11 +134,10 @@ app.command(
         if (textArray[1]) {
           let data = await QuizModel.find({ name: textArray[1] });
           if (data && data.length) {
-            await showGameCreateModal(app, body, context, data[0]);
+            await showGameEditModal(app, body, context, data[0]);
           } else {
             out = "Game does not exist";
           }
-          // startGame(textArray[1]);
         } else {
           out = "Please enter game id";
         }
@@ -187,7 +187,7 @@ app.action(
 );
 
 app.view(
-  "modal_callback_id",
+  "modal_create_callback_id",
   async ({ action, ack, context, view, body, say }: any) => {
     // Submission of modal
     await ack();

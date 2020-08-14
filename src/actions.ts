@@ -157,23 +157,187 @@ function getModalView(
     },
   };
 }
-export async function showGameCreateModal(
+export async function showGameCreateModal(app: any, body: any, context: any) {
+  try {
+    const questionElements = getQuestionAnswerElements(5);
+    await app.client.views.open({
+      token: context.botToken,
+      trigger_id: body.trigger_id,
+      view: {
+        type: "modal",
+        callback_id: "modal_create_callback_id",
+        title: {
+          type: "plain_text",
+          text: "Create Game",
+          emoji: false,
+        },
+        submit: {
+          type: "plain_text",
+          text: "Submit",
+          emoji: true,
+        },
+        close: {
+          type: "plain_text",
+          text: "Cancel",
+          emoji: true,
+        },
+        blocks: [
+          {
+            type: "input",
+            block_id: "quiz_name",
+            element: {
+              type: "plain_text_input",
+            },
+            label: {
+              type: "plain_text",
+              text: "Please enter a quiz name",
+              emoji: true,
+            },
+          },
+          {
+            type: "divider",
+          },
+          {
+            type: "context",
+            elements: [
+              {
+                type: "plain_text",
+                text: "Add Questions",
+                emoji: true,
+              },
+            ],
+          },
+          // {
+          //   type: "section",
+          //   accessory: {
+          //     type: "static_select",
+          //     placeholder: {
+          //       type: "plain_text",
+          //       text: "Select question item",
+          //       emoji: true,
+          //     },
+          //     options: [
+          //       {
+          //         text: {
+          //           type: "plain_text",
+          //           text: "MCQ",
+          //           emoji: true,
+          //         },
+          //         value: "answer-type-mcq",
+          //       },
+          //       {
+          //         text: {
+          //           type: "plain_text",
+          //           text: "Input",
+          //           emoji: true,
+          //         },
+          //         value: "answer-type-input",
+          //       },
+          //       {
+          //         text: {
+          //           type: "plain_text",
+          //           text: "Chat",
+          //           emoji: true,
+          //         },
+          //         value: "answer-type-chat",
+          //       },
+          //     ],
+          //   },
+          //   text: {
+          //     type: "mrkdwn",
+          //     text: " ",
+          //   },
+          // },
+          ...questionElements,
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: " ",
+            },
+            accessory: {
+              type: "button",
+              action_id: "add_question",
+              text: {
+                type: "plain_text",
+                text: "Add question",
+                emoji: true,
+              },
+              value: "add_question_button",
+            },
+          },
+        ],
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+export async function showGameEditModal(
   app: any,
   body: any,
   context: any,
-  data?: any
+  data: any
 ) {
   try {
-    await app.client.views.open(
-      getModalView(
-        app,
-        body,
-        context,
-        data ? data.questions.length : 5,
-        undefined,
-        data
-      )
+    const questionElements = getQuestionAnswerElements(
+      data.questions.length,
+      data
     );
+    await app.client.views.open({
+      token: context.botToken,
+      trigger_id: body.trigger_id,
+      view: {
+        type: "modal",
+        callback_id: "modal_edit_callback_id",
+        title: {
+          type: "plain_text",
+          text: "Edit Game",
+          emoji: false,
+        },
+        submit: {
+          type: "plain_text",
+          text: "Submit",
+          emoji: true,
+        },
+        close: {
+          type: "plain_text",
+          text: "Cancel",
+          emoji: true,
+        },
+        blocks: [
+          {
+            type: "context",
+            elements: [
+              {
+                type: "plain_text",
+                text: "Edit Questions",
+                emoji: true,
+              },
+            ],
+          },
+          ...questionElements,
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: " ",
+            },
+            accessory: {
+              type: "button",
+              action_id: "add_question",
+              text: {
+                type: "plain_text",
+                text: "Add question",
+                emoji: true,
+              },
+              value: "add_question_button",
+            },
+          },
+        ],
+      },
+    });
   } catch (error) {
     console.error(error);
     return null;
