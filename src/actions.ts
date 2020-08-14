@@ -303,7 +303,7 @@ ${
     ? "This is the final scoreboard!"
     : "Here's the scoreboard:"
 }
-${formattedScoreboard}
+\`\`\`${formattedScoreboard}\`\`\`
  
 `,
           });
