@@ -1,9 +1,10 @@
 import ScoreBoard from "./models/ScoreboardTemp";
 import { App, Context, SayFn } from "@slack/bolt";
 import quizRunner from "./services/quizRunner";
-import { isNil, get } from "lodash";
+import { isNil, get, forEach } from "lodash";
 import { QuizModel } from "./models/Quiz";
 import { ScoreboardModel } from "./models/Scoreboard";
+import { getButtonAttachment } from "./utils";
 const DEFAULT_QUESTIONS_COUNT = 5;
 
 export function getQuestionAnswerElements(number: number, data?: any) {
@@ -286,6 +287,8 @@ export async function startGame(
       },
       postScoreboard: async (question: any, index: number) => {
         const formattedScoreboard = scoreboard.getFormattedScoreboard();
+
+        console.log(formattedScoreboard, scoreboard, "format");
         if (formattedScoreboard) {
           const pointsMessage = userAwardedPointForThisRound
             ? `<@${userAwardedPointForThisRound}> gets this one. `
@@ -338,6 +341,7 @@ The winner of ${quiz1.name} is :drum_with_drumsticks: :drum_with_drumsticks: :dr
     });
 
     app.message(/^.*/, async ({ message, say }) => {
+      console.log("hello here ", message);
       if (expectedAnswer === message.text && !userAwardedPointForThisRound) {
         // await say(`Hello, <@${message.user}>\nBilkul sahi jawab!!!:tada:`);
         const existingUserScore = scoreboard.getUserScore(message.user);
@@ -408,4 +412,61 @@ export function getScoreboard(gameId: string) {
 }
 export function tickUserScore(userId: string) {
   // add user score by 1
+}
+
+export async function showGameList(
+  app: any,
+  say: any,
+  userId: any,
+  context: any
+) {
+  // add user score by 1
+
+  // {
+  //   text: "Choose a game to play",
+  //   fallback: "You are unable to choose a game",
+  //   callback_id: "button_callback",
+  //   color: "#3AA3E3",
+  //   actions: [
+  //     {
+  //       name: "edit",
+  //       text: "Edit Game",
+  //       type: "button",
+  //       value: "maze",
+  //     },
+  //     {
+  //       name: "game",
+  //       text: "Delete Game",
+  //       style: "danger",
+  //       type: "button",
+  //       value: "war",
+  //       confirm: {
+  //         title: "Are you sure?",
+  //         text: "",
+  //         ok_text: "Yes",
+  //         dismiss_text: "No",
+  //       },
+  //     },
+  //   ],
+  // },
+
+  const user = userId;
+  const quizzes = await QuizModel.find({ userId: user });
+  if (quizzes.length) {
+    let message: any = {
+      token: context.botToken,
+      channel: userId,
+      text: "List of games.",
+      attachments: [],
+    };
+
+    forEach(quizzes, (quiz) => {
+      const attachment: any = getButtonAttachment(quiz);
+      message.attachments.push(attachment);
+    });
+
+    say(message);
+  } else {
+    say(`No quizzes found!`);
+  }
 }

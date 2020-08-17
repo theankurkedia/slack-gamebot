@@ -9,12 +9,13 @@ import {
   cancelGame,
   getNextQuestionNumber,
   addQuestionFieldInModal,
+  showGameList,
 } from "./actions";
 
 import mongoose from "mongoose";
 import { QuestionModel } from "./models/Question";
 import { QuizModel } from "./models/Quiz";
-import { getValueFromFormInput } from "./utils";
+import { getValueFromFormInput, getButtonAttachment } from "./utils";
 import { forEach, get } from "lodash";
 import { getQuizFormData } from "./getQuizFormData";
 
@@ -58,18 +59,42 @@ const app = new App({
   console.log("⚡️ Bolt app is running!");
 })();
 
-app.message("create test", async ({ say, context }) => {
-  console.log(context);
+app.message("list", async ({ say, context, message }) => {
+  const user = message.user;
 
-  const quiz = new QuizModel();
-  quiz.name = "Test";
-  quiz.save(function(err: any) {
-    if (err) {
-      console.log("hello here", err.message);
-      say(err.message);
-    } else {
-      say("Quiz created successfully");
-    }
+  await say({
+    token: context.botToken,
+    channel: user,
+    text: "Would you like to play a game?",
+    attachments: [
+      {
+        text: "Choose a game to play",
+        fallback: "You are unable to choose a game",
+        callback_id: "button_callback",
+        color: "#3AA3E3",
+        actions: [
+          {
+            name: "edit",
+            text: "Edit Game",
+            type: "button",
+            value: "maze",
+          },
+          {
+            name: "game",
+            text: "Delete Game",
+            style: "danger",
+            type: "button",
+            value: "war",
+            confirm: {
+              title: "Are you sure?",
+              text: "",
+              ok_text: "Yes",
+              dismiss_text: "No",
+            },
+          },
+        ],
+      },
+    ],
   });
 });
 
@@ -132,11 +157,14 @@ app.command(
     let out;
     await ack();
     let textArray = command.text.split(" ");
+    const user = body.user_id;
+
     switch (textArray[0]) {
       case "create":
         await showGameCreateModal(app, body, context);
         // TODO: can show a modal for this
         break;
+
       case "edit":
         if (textArray[1]) {
           let data = await QuizModel.findOne({ name: textArray[1] });
@@ -151,11 +179,8 @@ app.command(
         }
         break;
       case "start":
-        // console.log(body, "body here");
-
         const channelName = body.channel_name;
         let data = await QuizModel.findOne({ name: textArray[1] });
-        const user = body.user_id;
 
         // console.log(channelName, body, "channelName");
         if (data && user === data.userId) {
@@ -171,6 +196,11 @@ app.command(
         } else {
           out = "Game does not exist";
         }
+        break;
+
+      case "list":
+        await showGameList(app, say, user, context);
+        // TODO: can show a modal for this
         break;
       case "help":
         out = commandsList;
@@ -206,6 +236,34 @@ app.action("add_question", async ({ ack, context, body }: any) => {
   );
 });
 
+app.action(
+  { callback_id: "button_callback" },
+  async ({ context, ack, action, view, body, say }: any) => {
+    await ack();
+
+    if (action.name === "edit") {
+      let data = await QuizModel.findOne({ name: action.value });
+      const user = body["user"]["id"];
+      if (data && user === data.userId) {
+        await showGameEditModal(app, body, context, data);
+      } else {
+        say("Something went wrong!");
+      }
+    } else if (action.name === "delete") {
+      //
+      console.log(action);
+      let name = action.value;
+
+      QuizModel.deleteOne({ name }, function(err: any) {
+        if (err) return say("Something went wrong!");
+        // deleted at most one tank document
+        say(`Quiz \`${name}\` deleted successfully.`);
+      });
+    }
+  }
+);
+
+// app.message("button_callback")
 app.view(
   "modal_create_callback_id",
   async ({ ack, context, view, body }: any) => {
@@ -220,19 +278,21 @@ app.view(
     quiz.userId = user;
     quiz.addAllQuestions(quizFormData.questions);
 
+    let messageObj: any = {
+      token: context.botToken,
+      channel: user,
+      text: "",
+    };
     quiz.save(async function(err: any) {
       if (err) {
-        msg = `There was an error with your submission \n \`${err.message}\``;
+        messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
-        msg = "Your submission was successful";
+        messageObj.text = `Quiz created successfully.`;
+        messageObj.attachments = [getButtonAttachment(quiz)];
       }
       // Message the user
       try {
-        await app.client.chat.postMessage({
-          token: context.botToken,
-          channel: user,
-          text: msg,
-        });
+        await app.client.chat.postMessage(messageObj);
       } catch (error) {
         console.error(error);
       }
@@ -244,12 +304,19 @@ app.view(
   "modal_edit_callback_id",
   async ({ action, ack, context, view, body, say }: any) => {
     // Submission of modal
+
     await ack();
     const user = body["user"]["id"];
     let msg = "";
     console.log("edit", view);
     let quizFormData = getQuizFormData(view);
     let quiz = await QuizModel.findOne({ name: quizFormData.name });
+
+    let messageObj: any = {
+      token: context.botToken,
+      channel: user,
+      text: "",
+    };
 
     if (!quiz || quiz.userId !== user) {
       try {
@@ -266,17 +333,13 @@ app.view(
 
       quiz.save(async function(err: any) {
         if (err) {
-          msg = `There was an error with your submission \n \`${err.message}\``;
+          messageObj.text = `There was an error with your submission \n \`${err.message}\``;
         } else {
-          msg = "Your submission was successful";
+          messageObj.text = `Quiz \`${quiz.name}\` updated successfully.`;
         }
         // Message the user
         try {
-          await app.client.chat.postMessage({
-            token: context.botToken,
-            channel: user,
-            text: msg,
-          });
+          await app.client.chat.postMessage(messageObj);
         } catch (error) {
           console.error(error);
         }
