@@ -17,6 +17,37 @@ export function getQuestionNumberFromView(view: any) {
   return no - 1;
 }
 
+export function getValueFromView(view: any, name: any) {
+  const dataInput = view["state"]["values"];
+
+  // Object.entries(dataInput).map((entry) => {
+  //   let key = entry[0];
+
+  // let value = getValueFromFormInput(dataInput[name]);
+  console.log(dataInput[name]);
+
+  //   if (key === "quiz_name") {
+  //     // quiz.name = value;
+  //     quizObject.name = value;
+  //   } else if (key.startsWith("question_")) {
+  //     quizObject.questions.push({
+  //       question: value,
+  //       answer: getValueFromFormInput(
+  //         dataInput[`answer_${key.split(`question_`)[1]}`]
+  //       ),
+  //     });
+  //   }
+  // });
+
+  // return quizObject;
+
+  // console.log(view, "view here");
+  // let no = view["title"]["text"];
+  // no = no ? no.split(" ") : [];
+  // no = no[1];
+  // return no - 1;
+}
+
 export const getButtonAttachment = (quiz: any): any => {
   return {
     text: quiz.name,
