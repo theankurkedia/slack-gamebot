@@ -329,6 +329,16 @@ app.action(
     if (quiz && user === quiz.userId) {
       quiz.deleteQuestion(parseInt(action.value, 10));
       quiz.save();
+
+      await updateQuestionModal(
+        app,
+        body,
+        context,
+        name,
+        quiz.questions.length,
+        get(body, "view.callback_id") === "modal_create_callback_id",
+        quiz
+      );
     }
 
     // if (action.name === "edit") {
