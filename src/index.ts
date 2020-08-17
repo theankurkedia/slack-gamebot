@@ -10,13 +10,14 @@ import {
   getNextQuestionNumber,
   addQuestionFieldInModal,
   showGameList,
+  setExistingQuestionCount,
 } from "./actions";
-
+const DEFAULT_QUESTIONS_COUNT = 5;
 import mongoose from "mongoose";
 import { QuestionModel } from "./models/Question";
 import { QuizModel } from "./models/Quiz";
 import { getValueFromFormInput, getButtonAttachment } from "./utils";
-import { forEach, get } from "lodash";
+import { forEach, get, isEmpty } from "lodash";
 import { getQuizFormData } from "./getQuizFormData";
 
 const uri: any = process.env.MONGODB_URI;
@@ -161,6 +162,7 @@ app.command(
 
     switch (textArray[0]) {
       case "create":
+        setExistingQuestionCount(DEFAULT_QUESTIONS_COUNT);
         await showGameCreateModal(app, body, context);
         // TODO: can show a modal for this
         break;
@@ -170,6 +172,9 @@ app.command(
           let data = await QuizModel.findOne({ name: textArray[1] });
           const user = body.user_id;
           if (data && user === data.userId) {
+            if (get(data, "questions.length")) {
+              setExistingQuestionCount(get(data, "questions.length"));
+            }
             await showGameEditModal(app, body, context, data);
           } else {
             out = "Game does not exist";
@@ -224,7 +229,7 @@ app.command(
 app.action("add_question", async ({ ack, context, body }: any) => {
   await ack();
   let quizFormData = getQuizFormData(body["view"]);
-  // console.log("*** 🔥 quizFormData", context, view, body);
+
   let questionNo = getNextQuestionNumber();
   await addQuestionFieldInModal(
     app,
@@ -308,7 +313,6 @@ app.view(
     await ack();
     const user = body["user"]["id"];
     let msg = "";
-    console.log("edit", view);
     let quizFormData = getQuizFormData(view);
     let quiz = await QuizModel.findOne({ name: quizFormData.name });
 
