@@ -10,6 +10,12 @@ export function getGameNameFromView(view: any) {
     : undefined;
   return quizName;
 }
+export function getQuestionNumberFromView(view: any) {
+  let no = view["title"]["text"];
+  no = no ? no.split(" ") : [];
+  no = no[1];
+  return no - 1;
+}
 
 export const getButtonAttachment = (quiz: any): any => {
   return {

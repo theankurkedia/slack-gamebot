@@ -23,6 +23,7 @@ import {
   getValueFromFormInput,
   getButtonAttachment,
   getGameNameFromView,
+  getQuestionNumberFromView,
 } from "./utils";
 import { forEach, get, isEmpty } from "lodash";
 import { getQuizFormData } from "./getQuizFormData";
@@ -168,8 +169,13 @@ app.command(
     switch (textArray[0]) {
       case "create":
         if (textArray[1]) {
-          setExistingQuestionCount(DEFAULT_QUESTIONS_COUNT);
-          await showGameCreateModal(app, body, context, textArray[1]);
+          let data = await QuizModel.findOne({ name: textArray[1] });
+          if (!data) {
+            setExistingQuestionCount(DEFAULT_QUESTIONS_COUNT);
+            await showGameCreateModal(app, body, context, textArray[1]);
+          } else {
+            out = ":warning: Game already exists :warning:";
+          }
         } else {
           out = "Please enter name for the game";
         }
@@ -254,12 +260,18 @@ app.action(
   "edit_question",
   async ({ ack, body, context, message, event, action, options }: any) => {
     await ack();
-    // console.log("*** 🔥 act", action, message, event);
     let name = getGameNameFromView(body["view"]);
-    // let data = await QuizModel.findOne({ name: name });
-    // console.log("*** 🔥 data", data);
-    // let data =
-    await openQuestionEditView(app, body, context, name, false, 1, {});
+    let quizData = await QuizModel.findOne({ name: name });
+    let questionData = quizData.questions[action.value - 1];
+    await openQuestionEditView(
+      app,
+      body,
+      context,
+      name,
+      false,
+      action.value,
+      questionData
+    );
   }
 );
 
@@ -290,13 +302,13 @@ app.action(
   }
 );
 
-// app.message("button_callback")
 app.view(
   "question_edit_callback_id",
   async ({ ack, context, view, body }: any) => {
-    // Submission of modal
     await ack();
-    console.log("*** 🔥 edited question");
+    let quizName = getGameNameFromView(view);
+    let questionNumber = getQuestionNumberFromView(view);
+    console.log("*** 🔥 edited question", quizName, questionNumber);
   }
 );
 app.view(
@@ -304,7 +316,9 @@ app.view(
   async ({ ack, context, view, body }: any) => {
     // Submission of modal
     await ack();
-    console.log("*** 🔥 add question");
+    let quizName = getGameNameFromView(view);
+    let questionNumber = getQuestionNumberFromView(view);
+    console.log("*** 🔥 add question", quizName, questionNumber);
   }
 );
 app.view(

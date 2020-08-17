@@ -38,7 +38,7 @@ function getStaticQuestionAnswerElements(number: number, data?: any) {
               text: "Edit",
               emoji: true,
             },
-            value: `edit_question_${i + 1}`,
+            value: `${i + 1}`,
             action_id: "edit_question",
           },
           {
@@ -48,7 +48,7 @@ function getStaticQuestionAnswerElements(number: number, data?: any) {
               text: "Delete",
               emoji: true,
             },
-            value: `delete_question_${i + 1}`,
+            value: `${i + 1}`,
             action_id: "delete_question",
           },
         ],
@@ -68,7 +68,7 @@ export async function openQuestionEditView(
   context: any,
   gameName: string,
   newQuestion: boolean,
-  questionIndex?: number,
+  questionIndex: number,
   data?: any
 ) {
   try {
@@ -83,8 +83,7 @@ export async function openQuestionEditView(
           : "question_edit_callback_id",
         title: {
           type: "plain_text",
-          text:
-            (newQuestion ? "Add Question" : "Edit Question") + ` - ${gameName}`,
+          text: "Question" + ` ${questionIndex} - ${gameName}`,
         },
         submit: {
           type: "plain_text",
