@@ -332,11 +332,12 @@ export async function showGameCreateModal(
   app: any,
   body: any,
   context: any,
-  name: string
+  name: string,
+  initialQuestions: number
 ) {
   try {
     await app.client.views.open(
-      getModalView(body, context, name, 1, true, undefined)
+      getModalView(body, context, name, initialQuestions, true)
     );
   } catch (error) {
     console.error(error);

@@ -15,7 +15,7 @@ import {
   showGameEditModal,
   openQuestionEditView,
 } from "./views";
-const DEFAULT_QUESTIONS_COUNT = 1;
+const DEFAULT_QUESTIONS_COUNT = 0;
 import mongoose from "mongoose";
 import { QuestionModel } from "./models/Question";
 import { QuizModel } from "./models/Quiz";
@@ -173,7 +173,13 @@ app.command(
           let data = await QuizModel.findOne({ name: textArray[1] });
           if (!data) {
             setExistingQuestionCount(DEFAULT_QUESTIONS_COUNT);
-            await showGameCreateModal(app, body, context, textArray[1]);
+            await showGameCreateModal(
+              app,
+              body,
+              context,
+              textArray[1],
+              DEFAULT_QUESTIONS_COUNT
+            );
           } else {
             out = ":warning: Game already exists :warning:";
           }
@@ -190,6 +196,7 @@ app.command(
             if (get(data, "questions.length")) {
               setExistingQuestionCount(get(data, "questions.length"));
             }
+            console.log("*** 🔥 data", data);
             await showGameEditModal(app, body, context, textArray[1], data);
           } else {
             out = "Game does not exist";
@@ -309,7 +316,7 @@ app.view(
     await ack();
     let quizName = getGameNameFromView(view);
     let questionNumber = getQuestionNumberFromView(view);
-    console.log("*** 🔥 edited question", quizName, questionNumber);
+    // console.log("*** 🔥 edited question", quizName, questionNumber);
   }
 );
 app.view(
@@ -323,16 +330,14 @@ app.view(
     const quiz = await QuizModel.findOne({ name: quizName });
     if (quiz) {
       const questionObj = new QuestionModel();
-
       let question = getValueFromView(view, "question_view");
       let answer = getValueFromView(view, "answer_view");
       questionObj.question = question;
       questionObj.answer = answer;
-
       quiz.addQuestion(questionObj);
+      // let updatedQuiz = await QuizModel.findOne({ name: quizName });
+      // console.log("*** 🔥 add question", updatedQuiz.questions);
     }
-
-    console.log("*** 🔥 add question", quizName, questionNumber);
   }
 );
 app.view(
