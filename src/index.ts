@@ -211,8 +211,8 @@ app.command(
         break;
 
       case "list":
-        user = body.user_id;
-        await showGameList(app, say, user, context);
+        let user1 = body.user_id;
+        await showGameList(app, say, user1, context);
         // TODO: can show a modal for this
         break;
       case "help":
@@ -281,7 +281,7 @@ app.action(
       console.log(action);
       let name = action.value;
 
-      QuizModel.deleteOne({ name }, function (err: any) {
+      QuizModel.deleteOne({ name }, function(err: any) {
         if (err) return say("Something went wrong!");
         // deleted at most one tank document
         say(`Quiz \`${name}\` deleted successfully.`);
@@ -326,7 +326,7 @@ app.view(
       channel: user,
       text: "",
     };
-    quiz.save(async function (err: any) {
+    quiz.save(async function(err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -374,7 +374,7 @@ app.view(
     } else {
       quiz.addAllQuestions(quizFormData.questions);
 
-      quiz.save(async function (err: any) {
+      quiz.save(async function(err: any) {
         if (err) {
           messageObj.text = `There was an error with your submission \n \`${err.message}\``;
         } else {
