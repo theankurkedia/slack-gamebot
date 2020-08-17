@@ -1,5 +1,5 @@
 require("dotenv").config();
-import { App } from "@slack/bolt";
+import { App, ViewSubmitAction, AckFn } from "@slack/bolt";
 import {
   getScoreboard,
   getUserScore,
@@ -14,6 +14,7 @@ import {
   updateQuestionModal,
   showGameEditModal,
   openQuestionEditView,
+  getModalView,
 } from "./views";
 const DEFAULT_QUESTIONS_COUNT = 0;
 import mongoose from "mongoose";
@@ -200,7 +201,6 @@ app.command(
             if (get(data, "questions.length")) {
               setExistingQuestionCount(get(data, "questions.length"));
             }
-            console.log("*** 🔥 data", data);
             await showGameEditModal(app, body, context, textArray[1], data);
           } else {
             out = "Game does not exist";
@@ -301,18 +301,16 @@ app.action(
       }
     } else if (action.name === "delete") {
       //
-      console.log(action);
+      // console.log(action);
       let name = action.value;
       let data = await QuizModel.findOne({ name: action.value });
       const user = body["user"]["id"];
 
-      if (data && user === data.userId) {
-        QuizModel.deleteOne({ name }, function(err: any) {
-          if (err) return say("Something went wrong!");
-          // deleted at most one tank document
-          say(`Quiz \`${name}\` deleted successfully.`);
-        });
-      }
+      QuizModel.deleteOne({ name }, function (err: any) {
+        if (err) return say("Something went wrong!");
+        // deleted at most one tank document
+        say(`Quiz \`${name}\` deleted successfully.`);
+      });
     }
   }
 );
@@ -377,13 +375,34 @@ app.view(
       let answer = getValueFromView(view, "answer_view");
       questionObj.question = question;
       questionObj.answer = answer;
-      console.log(questionObj, questionIndex);
-
       quiz.addQuestion(questionObj, questionIndex);
 
-      quiz.save(async function(err: any) {
-        console.log("error", err);
+      await quiz.save(async function (err: any) {
+        // console.log("error", err);
+        if (!err) {
+        }
+        // if (err) {
+        //   messageObj.text = `There was an error with your submission \n \`${err.message}\``;
+        // } else {
+        //   messageObj.text = `Quiz created successfully.`;
+        //   messageObj.attachments = [getButtonAttachment(quiz)];
+        // }
+        // // Message the user
+        // try {
+        //   await app.client.chat.postMessage(messageObj);
+        // } catch (error) {
+        //   console.error(error);
+        // }
       });
+      // await updateQuestionModal(
+      //   app,
+      //   body,
+      //   context,
+      //   quizName,
+      //   quiz.questions.length,
+      //   get(body, "view.callback_id") === "modal_create_callback_id",
+      //   quiz
+      // );
     }
   }
 );
@@ -391,12 +410,9 @@ app.view(
   "question_add_callback_id",
   async ({ ack, context, view, body }: any) => {
     // Submission of modal
-    await ack();
     let quizName = getGameNameFromView(view);
-
+    await ack();
     const quiz = await QuizModel.findOne({ name: quizName });
-    console.log(quiz, "quiz here");
-
     if (quiz) {
       const questionObj = new QuestionModel();
       let question = getValueFromView(view, "question_view");
@@ -404,10 +420,32 @@ app.view(
       questionObj.question = question;
       questionObj.answer = answer;
       quiz.addQuestion(questionObj);
-
-      quiz.save(async function(err: any) {
-        console.log("error", err);
+      await quiz.save(async function (err: any) {
+        // console.log("error", err);
+        if (!err) {
+        }
+        // if (err) {
+        //   messageObj.text = `There was an error with your submission \n \`${err.message}\``;
+        // } else {
+        //   messageObj.text = `Quiz created successfully.`;
+        //   messageObj.attachments = [getButtonAttachment(quiz)];
+        // }
+        // // Message the user
+        // try {
+        //   await app.client.chat.postMessage(messageObj);
+        // } catch (error) {
+        //   console.error(error);
+        // }
       });
+      // await updateQuestionModal(
+      //   app,
+      //   body,
+      //   context,
+      //   quizName,
+      //   quiz.questions.length + 1,
+      //   get(body, "view.callback_id") === "modal_create_callback_id",
+      //   quiz
+      // );
     }
 
     // quiz.save();
@@ -433,7 +471,7 @@ app.view(
       channel: user,
       text: "",
     };
-    quiz.save(async function(err: any) {
+    quiz.save(async function (err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -481,7 +519,7 @@ app.view(
     } else {
       quiz.addAllQuestions(quizFormData.questions);
 
-      quiz.save(async function(err: any) {
+      quiz.save(async function (err: any) {
         if (err) {
           messageObj.text = `There was an error with your submission \n \`${err.message}\``;
         } else {
