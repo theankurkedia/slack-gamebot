@@ -25,6 +25,7 @@ import {
   getGameNameFromView,
   getQuestionNumberFromView,
   getValueFromView,
+  getQuestionIndex,
 } from "./utils";
 import { forEach, get, isEmpty } from "lodash";
 import { getQuizFormData } from "./getQuizFormData";
@@ -308,8 +309,22 @@ app.view(
   async ({ ack, context, view, body }: any) => {
     await ack();
     let quizName = getGameNameFromView(view);
-    let questionNumber = getQuestionNumberFromView(view);
-    console.log("*** 🔥 edited question", quizName, questionNumber);
+    let questionIndex = getQuestionIndex(view);
+
+    const quiz = await QuizModel.findOne({ name: quizName });
+    if (quiz) {
+      const questionObj = new QuestionModel();
+      let question = getValueFromView(view, "question_view");
+      let answer = getValueFromView(view, "answer_view");
+      questionObj.question = question;
+      questionObj.answer = answer;
+      console.log(questionObj);
+
+      quiz.addQuestion(questionObj, questionIndex);
+
+      console.log(quiz, "quiz here");
+      quiz.save();
+    }
   }
 );
 app.view(
@@ -318,7 +333,6 @@ app.view(
     // Submission of modal
     await ack();
     let quizName = getGameNameFromView(view);
-    let questionNumber = getQuestionNumberFromView(view);
 
     const quiz = await QuizModel.findOne({ name: quizName });
     if (quiz) {
@@ -330,9 +344,8 @@ app.view(
       questionObj.answer = answer;
 
       quiz.addQuestion(questionObj);
+      quiz.save();
     }
-
-    console.log("*** 🔥 add question", quizName, questionNumber);
   }
 );
 app.view(

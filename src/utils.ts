@@ -17,13 +17,21 @@ export function getQuestionNumberFromView(view: any) {
   return no - 1;
 }
 
+export function getQuestionIndex(view: any) {
+  let no = view["title"]["text"];
+  no = no ? no.split(" ") : [];
+  no = no[1];
+  return no - 1;
+}
+
 export function getValueFromView(view: any, name: any) {
   const dataInput = view["state"]["values"];
 
   // Object.entries(dataInput).map((entry) => {
   //   let key = entry[0];
 
-  // let value = getValueFromFormInput(dataInput[name]);
+  let value = getValueFromFormInput(dataInput[name]);
+  return value;
   console.log(dataInput[name]);
 
   //   if (key === "quiz_name") {

@@ -1,6 +1,6 @@
 import { QuestionModel, QuestionSchema } from "./Question";
 import { ScoreboardSchema, ScoreboardModel } from "./Scoreboard";
-import { forEach } from "lodash";
+import { forEach, isNil } from "lodash";
 
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
@@ -27,8 +27,14 @@ QuizSchema.methods = {
     return "test";
   },
 
-  addQuestion: function(question: typeof QuestionModel) {
-    this.questions.push(question);
+  addQuestion: function(question: typeof QuestionModel, index?: number) {
+    if (!isNil(index)) {
+      // replacing the question
+      console.log(index, "index here");
+      this.questions.splice(question, index, 1);
+    } else {
+      this.questions.push(question);
+    }
   },
   addAllQuestions: function(questions: any) {
     this.questions = [];
