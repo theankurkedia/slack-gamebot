@@ -24,6 +24,7 @@ import {
   getButtonAttachment,
   getGameNameFromView,
   getQuestionNumberFromView,
+  getValueFromView,
 } from "./utils";
 import { forEach, get, isEmpty } from "lodash";
 import { getQuizFormData } from "./getQuizFormData";
@@ -318,6 +319,19 @@ app.view(
     await ack();
     let quizName = getGameNameFromView(view);
     let questionNumber = getQuestionNumberFromView(view);
+
+    const quiz = await QuizModel.findOne({ name: quizName });
+    if (quiz) {
+      const questionObj = new QuestionModel();
+
+      let question = getValueFromView(view, "question_view");
+      let answer = getValueFromView(view, "answer_view");
+      questionObj.question = question;
+      questionObj.answer = answer;
+
+      quiz.addQuestion(questionObj);
+    }
+
     console.log("*** 🔥 add question", quizName, questionNumber);
   }
 );
