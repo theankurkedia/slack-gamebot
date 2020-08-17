@@ -138,6 +138,7 @@ export async function openQuestionEditView(
 ) {
   try {
     await app.client.views.push({
+      notify_on_close: true,
       trigger_id: body.trigger_id,
       token: context.botToken,
       view_id: body.view.id,
@@ -194,7 +195,7 @@ export async function openQuestionEditView(
     console.error(error);
   }
 }
-function getModalView(
+export function getModalView(
   body: any,
   context: any,
   gameName: string,
@@ -203,6 +204,7 @@ function getModalView(
   viewId?: string,
   data?: any
 ) {
+  console.log("*** 🔥 data", data);
   const questionElements = getStaticQuestionAnswerElements(questionNos, data);
   return {
     token: context.botToken,

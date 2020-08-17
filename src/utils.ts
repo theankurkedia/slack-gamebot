@@ -32,7 +32,7 @@ export function getValueFromView(view: any, name: any) {
 
   let value = getValueFromFormInput(dataInput[name]);
   return value;
-  console.log(dataInput[name]);
+  // console.log(dataInput[name]);
 
   //   if (key === "quiz_name") {
   //     // quiz.name = value;
