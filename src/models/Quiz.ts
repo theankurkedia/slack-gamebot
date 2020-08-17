@@ -20,7 +20,7 @@ const QuizSchema = new Schema({
   channel: { type: String, defautl: "" },
   questions: [QuestionSchema],
   scoreboard: ScoreboardSchema,
-  answerMatchPercentage: { type: Number, default: 1 },
+  answerMatchPercentage: { type: Number, default: 0.8 },
 });
 
 QuizSchema.methods = {
