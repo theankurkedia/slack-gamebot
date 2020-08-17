@@ -7,6 +7,7 @@ import { ScoreboardModel } from "./models/Scoreboard";
 import { getButtonAttachment } from "./utils";
 const DEFAULT_QUESTIONS_COUNT = 1;
 let questionCount: number = -1;
+var stringSimilarity = require("string-similarity");
 
 export function setExistingQuestionCount(count: number) {
   questionCount = count;
@@ -128,7 +129,16 @@ The winner of ${quiz1.name} is :drum_with_drumsticks: :drum_with_drumsticks: :dr
 
     app.message(/^.*/, async ({ message, say }) => {
       console.log("hello here ", message);
-      if (expectedAnswer === message.text && !userAwardedPointForThisRound) {
+
+      const answerMatched = stringSimilarity.compareTwoStrings(
+        message.text?.toLowerCase(),
+        expectedAnswer?.toLowerCase()
+      );
+
+      if (
+        answerMatched >= quiz1.answerMatchPercentage &&
+        !userAwardedPointForThisRound
+      ) {
         // await say(`Hello, <@${message.user}>\nBilkul sahi jawab!!!:tada:`);
         const existingUserScore = scoreboard.getUserScore(message.user);
         console.log(existingUserScore, "existingUserScore");

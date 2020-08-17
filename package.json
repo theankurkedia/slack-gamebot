@@ -23,6 +23,7 @@
         "dotenv": "^8.2.0",
         "lodash": "^4.17.20",
         "mongodb": "^3.6.0",
-        "mongoose": "^5.9.28"
+        "mongoose": "^5.9.28",
+        "string-similarity": "^4.0.2"
     }
 }

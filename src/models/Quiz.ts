@@ -20,6 +20,7 @@ const QuizSchema = new Schema({
   channel: { type: String, defautl: "" },
   questions: [QuestionSchema],
   scoreboard: ScoreboardSchema,
+  answerMatchPercentage: { type: Number, default: 1 },
 });
 
 QuizSchema.methods = {
@@ -30,7 +31,6 @@ QuizSchema.methods = {
   addQuestion: function(question: typeof QuestionModel, index?: number) {
     if (!isNil(index)) {
       // replacing the question
-      console.log(index, "index here");
       this.questions.splice(index, 1, question);
     } else {
       this.questions.push(question);

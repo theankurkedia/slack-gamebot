@@ -29,6 +29,7 @@ import {
 } from "./utils";
 import { forEach, get, isEmpty } from "lodash";
 import { getQuizFormData } from "./getQuizFormData";
+var stringSimilarity = require("string-similarity");
 
 const uri: any = process.env.MONGODB_URI;
 mongoose
@@ -69,42 +70,44 @@ const app = new App({
 })();
 
 app.message("list", async ({ say, context, message }) => {
-  const user = message.user;
-
-  await say({
-    token: context.botToken,
-    channel: user,
-    text: "Would you like to play a game?",
-    attachments: [
-      {
-        text: "Choose a game to play",
-        fallback: "You are unable to choose a game",
-        callback_id: "button_callback",
-        color: "#3AA3E3",
-        actions: [
-          {
-            name: "edit",
-            text: "Edit Game",
-            type: "button",
-            value: "maze",
-          },
-          {
-            name: "game",
-            text: "Delete Game",
-            style: "danger",
-            type: "button",
-            value: "war",
-            confirm: {
-              title: "Are you sure?",
-              text: "",
-              ok_text: "Yes",
-              dismiss_text: "No",
-            },
-          },
-        ],
-      },
-    ],
-  });
+  console.log(
+    stringSimilarity.compareTwoStrings("play station", "playstation")
+  );
+  // const user = message.user;
+  // await say({
+  //   token: context.botToken,
+  //   channel: user,
+  //   text: "Would you like to play a game?",
+  //   attachments: [
+  //     {
+  //       text: "Choose a game to play",
+  //       fallback: "You are unable to choose a game",
+  //       callback_id: "button_callback",
+  //       color: "#3AA3E3",
+  //       actions: [
+  //         {
+  //           name: "edit",
+  //           text: "Edit Game",
+  //           type: "button",
+  //           value: "maze",
+  //         },
+  //         {
+  //           name: "game",
+  //           text: "Delete Game",
+  //           style: "danger",
+  //           type: "button",
+  //           value: "war",
+  //           confirm: {
+  //             title: "Are you sure?",
+  //             text: "",
+  //             ok_text: "Yes",
+  //             dismiss_text: "No",
+  //           },
+  //         },
+  //       ],
+  //     },
+  //   ],
+  // });
 });
 
 // app.command("/botsuraj", async ({ ack, body, say, context }) => {
@@ -331,18 +334,6 @@ app.view(
 
       quiz.save(async function(err: any) {
         console.log("error", err);
-        // if (err) {
-        //   messageObj.text = `There was an error with your submission \n \`${err.message}\``;
-        // } else {
-        //   messageObj.text = `Quiz created successfully.`;
-        //   messageObj.attachments = [getButtonAttachment(quiz)];
-        // }
-        // // Message the user
-        // try {
-        //   await app.client.chat.postMessage(messageObj);
-        // } catch (error) {
-        //   console.error(error);
-        // }
       });
     }
   }
@@ -355,6 +346,8 @@ app.view(
     let quizName = getGameNameFromView(view);
 
     const quiz = await QuizModel.findOne({ name: quizName });
+    console.log(quiz, "quiz here");
+
     if (quiz) {
       const questionObj = new QuestionModel();
       let question = getValueFromView(view, "question_view");
@@ -363,22 +356,8 @@ app.view(
       questionObj.answer = answer;
       quiz.addQuestion(questionObj);
 
-      console.log(quiz, "quiz here");
-
       quiz.save(async function(err: any) {
         console.log("error", err);
-        // if (err) {
-        //   messageObj.text = `There was an error with your submission \n \`${err.message}\``;
-        // } else {
-        //   messageObj.text = `Quiz created successfully.`;
-        //   messageObj.attachments = [getButtonAttachment(quiz)];
-        // }
-        // // Message the user
-        // try {
-        //   await app.client.chat.postMessage(messageObj);
-        // } catch (error) {
-        //   console.error(error);
-        // }
       });
     }
 
