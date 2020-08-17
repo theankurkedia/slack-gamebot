@@ -138,6 +138,7 @@ app.message("list", async ({ say, context, message }) => {
 const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create - create a new game
 /${process.env.COMMAND_NAME} cancel <id> - cancel the creation of game
 /${process.env.COMMAND_NAME} help  - list out the commands
+/${process.env.COMMAND_NAME} list  - list of all games
 /${process.env.COMMAND_NAME} start <id> - start the game
 /${process.env.COMMAND_NAME} assign <id> <name> @<channel>
 /${process.env.COMMAND_NAME} result <id> <name> - find the result of person \`\`\``;
