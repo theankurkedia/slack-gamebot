@@ -11,11 +11,11 @@ import {
 } from "./actions";
 import {
   showGameCreateModal,
-  addQuestionFieldInModal,
+  updateQuestionModal,
   showGameEditModal,
   openQuestionEditView,
 } from "./views";
-const DEFAULT_QUESTIONS_COUNT = 1;
+const DEFAULT_QUESTIONS_COUNT = 0;
 import mongoose from "mongoose";
 import { QuestionModel } from "./models/Question";
 import { QuizModel } from "./models/Quiz";
@@ -174,7 +174,13 @@ app.command(
           let data = await QuizModel.findOne({ name: textArray[1] });
           if (!data) {
             setExistingQuestionCount(DEFAULT_QUESTIONS_COUNT);
-            await showGameCreateModal(app, body, context, textArray[1]);
+            await showGameCreateModal(
+              app,
+              body,
+              context,
+              textArray[1],
+              DEFAULT_QUESTIONS_COUNT
+            );
           } else {
             out = ":warning: Game already exists :warning:";
           }
@@ -191,6 +197,7 @@ app.command(
             if (get(data, "questions.length")) {
               setExistingQuestionCount(get(data, "questions.length"));
             }
+            console.log("*** 🔥 data", data);
             await showGameEditModal(app, body, context, textArray[1], data);
           } else {
             out = "Game does not exist";
@@ -248,7 +255,7 @@ app.action("add_question", async ({ ack, context, body, view }: any) => {
   let name = getGameNameFromView(body["view"]);
   let questionNo = getNextQuestionNumber();
   await openQuestionEditView(app, body, context, name, true, questionNo);
-  // await addQuestionFieldInModal(
+  // await updateQuestionModal(
   //   app,
   //   body,
   //   context,
@@ -318,12 +325,25 @@ app.view(
       let answer = getValueFromView(view, "answer_view");
       questionObj.question = question;
       questionObj.answer = answer;
-      console.log(questionObj);
+      console.log(questionObj, questionIndex);
 
       quiz.addQuestion(questionObj, questionIndex);
 
-      console.log(quiz, "quiz here");
-      quiz.save();
+      quiz.save(async function(err: any) {
+        console.log("error", err);
+        // if (err) {
+        //   messageObj.text = `There was an error with your submission \n \`${err.message}\``;
+        // } else {
+        //   messageObj.text = `Quiz created successfully.`;
+        //   messageObj.attachments = [getButtonAttachment(quiz)];
+        // }
+        // // Message the user
+        // try {
+        //   await app.client.chat.postMessage(messageObj);
+        // } catch (error) {
+        //   console.error(error);
+        // }
+      });
     }
   }
 );
@@ -337,15 +357,33 @@ app.view(
     const quiz = await QuizModel.findOne({ name: quizName });
     if (quiz) {
       const questionObj = new QuestionModel();
-
       let question = getValueFromView(view, "question_view");
       let answer = getValueFromView(view, "answer_view");
       questionObj.question = question;
       questionObj.answer = answer;
-
       quiz.addQuestion(questionObj);
-      quiz.save();
+
+      console.log(quiz, "quiz here");
+
+      quiz.save(async function(err: any) {
+        console.log("error", err);
+        // if (err) {
+        //   messageObj.text = `There was an error with your submission \n \`${err.message}\``;
+        // } else {
+        //   messageObj.text = `Quiz created successfully.`;
+        //   messageObj.attachments = [getButtonAttachment(quiz)];
+        // }
+        // // Message the user
+        // try {
+        //   await app.client.chat.postMessage(messageObj);
+        // } catch (error) {
+        //   console.error(error);
+        // }
+      });
     }
+
+    // quiz.save();
+    // }
   }
 );
 app.view(

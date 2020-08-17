@@ -31,7 +31,7 @@ QuizSchema.methods = {
     if (!isNil(index)) {
       // replacing the question
       console.log(index, "index here");
-      this.questions.splice(question, index, 1);
+      this.questions.splice(index, 1, question);
     } else {
       this.questions.push(question);
     }
