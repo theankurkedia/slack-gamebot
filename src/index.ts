@@ -11,7 +11,7 @@ import {
 } from "./actions";
 import {
   showGameCreateModal,
-  addQuestionFieldInModal,
+  updateQuestionModal,
   showGameEditModal,
   openQuestionEditView,
 } from "./views";
@@ -246,7 +246,7 @@ app.action("add_question", async ({ ack, context, body, view }: any) => {
   let name = getGameNameFromView(body["view"]);
   let questionNo = getNextQuestionNumber();
   await openQuestionEditView(app, body, context, name, true, questionNo);
-  // await addQuestionFieldInModal(
+  // await updateQuestionModal(
   //   app,
   //   body,
   //   context,
@@ -293,7 +293,7 @@ app.action(
       console.log(action);
       let name = action.value;
 
-      QuizModel.deleteOne({ name }, function(err: any) {
+      QuizModel.deleteOne({ name }, function (err: any) {
         if (err) return say("Something went wrong!");
         // deleted at most one tank document
         say(`Quiz \`${name}\` deleted successfully.`);
@@ -340,7 +340,7 @@ app.view(
       channel: user,
       text: "",
     };
-    quiz.save(async function(err: any) {
+    quiz.save(async function (err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -388,7 +388,7 @@ app.view(
     } else {
       quiz.addAllQuestions(quizFormData.questions);
 
-      quiz.save(async function(err: any) {
+      quiz.save(async function (err: any) {
         if (err) {
           messageObj.text = `There was an error with your submission \n \`${err.message}\``;
         } else {

@@ -62,6 +62,71 @@ function getStaticQuestionAnswerElements(number: number, data?: any) {
   }
   return elements;
 }
+function getQuestionAnswerElements(number: number, data?: any) {
+  let elements: any = [];
+  for (let i = 0; i < number; i++) {
+    let questionData = get(data, `questions[${i}]`);
+    elements = elements.concat([
+      {
+        type: "input",
+        block_id: `question_${i + 1}`,
+        element: {
+          type: "plain_text_input",
+          initial_value: questionData ? questionData.question : undefined,
+        },
+        label: {
+          type: "plain_text",
+          text: `Question ${i + 1}`,
+          emoji: true,
+        },
+      },
+      {
+        type: "input",
+        block_id: `answer_${i + 1}`,
+        element: {
+          type: "plain_text_input",
+          initial_value: questionData ? questionData.answer : undefined,
+        },
+        label: {
+          type: "plain_text",
+          text: `Answer ${i + 1}`,
+          emoji: true,
+        },
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "Save",
+              emoji: true,
+            },
+            value: `save_question_${i + 1}`,
+            action_id: "save_question",
+          },
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "Delete",
+              emoji: true,
+            },
+            value: `delete_question_${i + 1}`,
+            action_id: "delete_question",
+          },
+        ],
+      },
+    ]);
+    if (i !== number - 1) {
+      elements.push({
+        type: "divider",
+      });
+    }
+  }
+  return elements;
+}
 export async function openQuestionEditView(
   app: any,
   body: any,
@@ -128,71 +193,6 @@ export async function openQuestionEditView(
   } catch (error) {
     console.error(error);
   }
-}
-function getQuestionAnswerElements(number: number, data?: any) {
-  let elements: any = [];
-  for (let i = 0; i < number; i++) {
-    let questionData = get(data, `questions[${i}]`);
-    elements = elements.concat([
-      {
-        type: "input",
-        block_id: `question_${i + 1}`,
-        element: {
-          type: "plain_text_input",
-          initial_value: questionData ? questionData.question : undefined,
-        },
-        label: {
-          type: "plain_text",
-          text: `Question ${i + 1}`,
-          emoji: true,
-        },
-      },
-      {
-        type: "input",
-        block_id: `answer_${i + 1}`,
-        element: {
-          type: "plain_text_input",
-          initial_value: questionData ? questionData.answer : undefined,
-        },
-        label: {
-          type: "plain_text",
-          text: `Answer ${i + 1}`,
-          emoji: true,
-        },
-      },
-      {
-        type: "actions",
-        elements: [
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Save",
-              emoji: true,
-            },
-            value: `save_question_${i + 1}`,
-            action_id: "save_question",
-          },
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Delete",
-              emoji: true,
-            },
-            value: `delete_question_${i + 1}`,
-            action_id: "delete_question",
-          },
-        ],
-      },
-    ]);
-    if (i !== number - 1) {
-      elements.push({
-        type: "divider",
-      });
-    }
-  }
-  return elements;
 }
 function getModalView(
   body: any,
@@ -343,7 +343,7 @@ export async function showGameCreateModal(
     return null;
   }
 }
-export async function addQuestionFieldInModal(
+export async function updateQuestionModal(
   app: any,
   body: any,
   context: any,
