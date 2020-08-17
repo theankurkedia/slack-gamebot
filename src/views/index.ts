@@ -48,7 +48,7 @@ function getStaticQuestionAnswerElements(number: number, data?: any) {
               text: "Delete",
               emoji: true,
             },
-            value: `${i + 1}`,
+            value: `${i}`,
             action_id: "delete_question",
           },
         ],
@@ -283,6 +283,7 @@ function getModalView(
         //   },
         // },
         ...questionElements,
+
         {
           type: "section",
           text: {

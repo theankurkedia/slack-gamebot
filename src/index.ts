@@ -291,7 +291,6 @@ app.action(
   { callback_id: "button_callback" },
   async ({ context, ack, action, view, body, say }: any) => {
     await ack();
-
     if (action.name === "edit") {
       let data = await QuizModel.findOne({ name: action.value });
       const user = body["user"]["id"];
@@ -304,13 +303,53 @@ app.action(
       //
       console.log(action);
       let name = action.value;
+      let data = await QuizModel.findOne({ name: action.value });
+      const user = body["user"]["id"];
 
-      QuizModel.deleteOne({ name }, function(err: any) {
-        if (err) return say("Something went wrong!");
-        // deleted at most one tank document
-        say(`Quiz \`${name}\` deleted successfully.`);
-      });
+      if (data && user === data.userId) {
+        QuizModel.deleteOne({ name }, function(err: any) {
+          if (err) return say("Something went wrong!");
+          // deleted at most one tank document
+          say(`Quiz \`${name}\` deleted successfully.`);
+        });
+      }
     }
+  }
+);
+
+app.action(
+  "delete_question",
+  async ({ context, ack, action, view, body, say }: any) => {
+    await ack();
+    let name = getGameNameFromView(body["view"]);
+
+    let quiz = await QuizModel.findOne({ name: name });
+    const user = body["user"]["id"];
+
+    if (quiz && user === quiz.userId) {
+      quiz.deleteQuestion(parseInt(action.value, 10));
+      quiz.save();
+    }
+
+    // if (action.name === "edit") {
+    //   let data = await QuizModel.findOne({ name: action.value });
+    //   const user = body["user"]["id"];
+    //   if (data && user === data.userId) {
+    //     await showGameEditModal(app, body, context, action.value, data);
+    //   } else {
+    //     say("Something went wrong!");
+    //   }
+    // } else if (action.name === "delete") {
+    //   //
+    //   console.log(action);
+    //   let name = action.value;
+
+    //   QuizModel.deleteOne({ name }, function(err: any) {
+    //     if (err) return say("Something went wrong!");
+    //     // deleted at most one tank document
+    //     say(`Quiz \`${name}\` deleted successfully.`);
+    //   });
+    // }
   }
 );
 

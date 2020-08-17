@@ -36,6 +36,9 @@ QuizSchema.methods = {
       this.questions.push(question);
     }
   },
+  deleteQuestion: function(index: number) {
+    this.questions.splice(index, 1);
+  },
   addAllQuestions: function(questions: any) {
     this.questions = [];
     forEach(questions, (quesData) => {
