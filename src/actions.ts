@@ -50,7 +50,7 @@ export async function startGame(
           // The token you used to initialize your app is stored in the `context` object
           token: context.botToken,
           channel: `#${channelName}`,
-          text: question.question,
+          text: `\`${question.question}\``,
           // blocks: [
           //   {
           //     type: "section",
@@ -128,13 +128,11 @@ The winner of ${quiz1.name} is :drum_with_drumsticks: :drum_with_drumsticks: :dr
     });
 
     app.message(/^.*/, async ({ message, say }) => {
-      console.log("hello here ", message);
-
       const answerMatched = stringSimilarity.compareTwoStrings(
         message.text?.toLowerCase(),
         expectedAnswer?.toLowerCase()
       );
-
+      console.log("hello here ", answerMatched);
       if (
         answerMatched >= quiz1.answerMatchPercentage &&
         !userAwardedPointForThisRound
