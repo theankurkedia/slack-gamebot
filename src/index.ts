@@ -168,158 +168,171 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <questionNos = 5
 //   await say(`User Details: ${user}`);
 // });
 
-app.command(
-  `/${process.env.COMMAND_NAME}`,
-  async ({ ack, body, context, say, command }) => {
-    let out;
-    await ack();
-    let textArray = command.text.split(" ");
+async function runCommand(
+  textArray: any,
+  body: any,
+  context: any,
+  say: any,
+  command: any,
+  user: any
+) {
+  let out;
 
-    switch (textArray[0]) {
-      case "create":
-        let gameName = textArray[1];
-        if (gameName) {
-          let questionNos = textArray[2];
-          let data = await QuizModel.findOne({ name: gameName });
-          if (!data) {
-            // setExistingQuestionCount(questionNos DEFAULT_QUESTIONS_COUNT);
-            await showGameCreateModal(
-              app,
-              body,
-              context,
-              textArray[1],
-              questionNos ? Number(questionNos) : DEFAULT_QUESTIONS_COUNT
-            );
-          } else {
-            out = ":warning: Game already exists :warning:";
-          }
+  switch (textArray[0]) {
+    case "create":
+      let gameName = textArray[1];
+      if (gameName) {
+        let questionNos = textArray[2];
+        let data = await QuizModel.findOne({ name: gameName });
+        if (!data) {
+          // setExistingQuestionCount(questionNos DEFAULT_QUESTIONS_COUNT);
+          await showGameCreateModal(
+            app,
+            body,
+            context,
+            textArray[1],
+            questionNos ? Number(questionNos) : DEFAULT_QUESTIONS_COUNT
+          );
         } else {
-          out = "Please enter name for the game";
+          out = ":warning: Game already exists :warning:";
         }
-        break;
-
-      case "edit":
-        if (textArray[1]) {
-          let data = await QuizModel.findOne({ name: textArray[1] });
-          const user = body.user_id;
-          if (data && user === data.userId) {
-            await showGameEditModal(app, body, context, textArray[1], data);
-          } else {
-            out = "Game does not exist";
-          }
-        } else {
-          out = "Please enter game id";
-        }
-        break;
-      case "start":
-        const channelName = body.channel_name;
-        let quiz = await QuizModel.findOne({ name: textArray[1] });
-        let user = body.user_id;
-
-        if (user === quiz.userId && !quiz.running && !quiz.paused) {
-          startGame(app, context, say, quiz, channelName);
-        } else {
-          if (!quiz.running) {
-            say("Please start the game first!");
-          } else if (quiz.paused) {
-            say("Game is paused! Please resume the game.");
-          } else {
-            say("Game not Found!");
-          }
-        }
-        break;
-
-      case "stop": {
-        const channelName = body.channel_name;
-        let quiz = await QuizModel.findOne({ name: textArray[1] });
-        let user = body.user_id;
-
-        if (user === quiz.userId) {
-          stopGame(quiz);
-        } else {
-          say("Game not found!");
-        }
-        break;
+      } else {
+        out = "Please enter name for the game";
       }
+      break;
 
-      case "resume": {
-        const channelName = body.channel_name;
-        let quiz = await QuizModel.findOne({ name: textArray[1] });
-        let user = body.user_id;
-        if (user === quiz.userId && quiz.running && quiz.paused) {
-          resumeGame(app, context, say, quiz, channelName);
-        } else {
-          if (!quiz.running) {
-            say("Please start the game first!");
-          } else if (!quiz.paused) {
-            say("Game is already running!");
-          } else {
-            say("Game not Found!");
-          }
-        }
-        break;
-      }
-      case "pause": {
-        const channelName = body.channel_name;
-        let quiz = await QuizModel.findOne({ name: textArray[1] });
-        let user = body.user_id;
-        if (user === quiz.userId && quiz.running) {
-          pauseGame(app, context, say, quiz, channelName);
-        } else {
-          if (!quiz.running) {
-            say("Please start the game first!");
-          } else {
-            say("Game not Found!");
-          }
-        }
-        break;
-      }
-
-      case "restart": {
-        const channelName = body.channel_name;
-        let quiz = await QuizModel.findOne({ name: textArray[1] });
-        let user = body.user_id;
-
-        if (user === quiz.userId) {
-          stopGame(quiz);
-          setTimeout(() => {
-            startGame(app, context, say, quiz, channelName);
-          }, 1000);
-        } else {
-          say("Game not found!");
-        }
-        break;
-      }
-      case "cancel":
-        if (textArray[1]) {
-          out = "Cancelling the game";
-          cancelGame(textArray[1]);
+    case "edit":
+      if (textArray[1]) {
+        let data = await QuizModel.findOne({ name: textArray[1] });
+        const user = body.user_id;
+        if (data && user === data.userId) {
+          await showGameEditModal(app, body, context, textArray[1], data);
         } else {
           out = "Game does not exist";
         }
-        break;
+      } else {
+        out = "Please enter game id";
+      }
+      break;
+    case "start":
+      const channelName = body.channel_name;
+      let quiz = await QuizModel.findOne({ name: textArray[1] });
 
-      case "list":
-        let user1 = body.user_id;
-        await showGameList(app, say, user1, context);
-        // TODO: can show a modal for this
-        break;
-      case "help":
-        out = commandsList;
-        break;
-      case "scoreboard":
-        out = getScoreboard("game");
-        break;
-      case "score":
-        out = getUserScore(command.user_id);
-        break;
-      default:
-        out = `<@${command.user_id}> ${command.text}`;
-        break;
+      if (user === quiz.userId && !quiz.running && !quiz.paused) {
+        startGame(app, context, say, quiz, channelName);
+      } else {
+        if (!quiz.running) {
+          say("Please start the game first!");
+        } else if (quiz.paused) {
+          say("Game is paused! Please resume the game.");
+        } else {
+          say("Game not Found!");
+        }
+      }
+      break;
+
+    case "stop": {
+      const channelName = body.channel_name;
+      let quiz = await QuizModel.findOne({ name: textArray[1] });
+
+      console.log(user, textArray[1]);
+
+      if (user === quiz.userId) {
+        stopGame(quiz);
+        say("Game stopped succesfully!");
+      } else {
+        say("Game not found!");
+      }
+      break;
     }
-    if (out) {
-      await say(`${out}`);
+
+    case "resume": {
+      const channelName = body.channel_name;
+      let quiz = await QuizModel.findOne({ name: textArray[1] });
+      if (user === quiz.userId && quiz.running && quiz.paused) {
+        resumeGame(app, context, say, quiz, channelName);
+        say("Game resumed!");
+      } else {
+        if (!quiz.running) {
+          say("Please start the game first!");
+        } else if (!quiz.paused) {
+          say("Game is already running!");
+        } else {
+          say("Game not Found!");
+        }
+      }
+      break;
     }
+    case "pause": {
+      const channelName = body.channel_name;
+      let quiz = await QuizModel.findOne({ name: textArray[1] });
+      if (user === quiz.userId && quiz.running) {
+        pauseGame(app, context, say, quiz, channelName);
+        say("Game paused!");
+      } else {
+        if (!quiz.running) {
+          say("Please start the game first!");
+        } else {
+          say("Game not Found!");
+        }
+      }
+      break;
+    }
+
+    case "restart": {
+      const channelName = body.channel_name;
+      let quiz = await QuizModel.findOne({ name: textArray[1] });
+      let user = body.user_id;
+
+      if (user === quiz.userId) {
+        stopGame(quiz);
+        setTimeout(() => {
+          startGame(app, context, say, quiz, channelName);
+        }, 1000);
+      } else {
+        say("Game not found!");
+      }
+      break;
+    }
+    case "cancel":
+      if (textArray[1]) {
+        out = "Cancelling the game";
+        cancelGame(textArray[1]);
+      } else {
+        out = "Game does not exist";
+      }
+      break;
+
+    case "list":
+      let user1 = body.user_id;
+      await showGameList(app, say, user1, context);
+      // TODO: can show a modal for this
+      break;
+    case "help":
+      out = commandsList;
+      break;
+    case "scoreboard":
+      out = getScoreboard("game");
+      break;
+    case "score":
+      out = getUserScore(command.user_id);
+      break;
+    default:
+      out = `<@${command.user_id}> ${command.text}`;
+      break;
+  }
+  if (out) {
+    await say(`${out}`);
+  }
+}
+app.command(
+  `/${process.env.COMMAND_NAME}`,
+  async ({ ack, body, context, say, command }) => {
+    await ack();
+    let textArray = command.text.split(" ");
+    let user = body.user_id;
+
+    runCommand(textArray, body, context, say, command, user);
   }
 );
 
@@ -360,19 +373,18 @@ app.command(
 
 app.action(
   { callback_id: "button_callback" },
-  async ({ context, ack, action, view, body, say }: any) => {
+  async ({ context, ack, action, view, body, say, command }: any) => {
     await ack();
+    const user = body["user"]["id"];
+
     if (action.name === "edit") {
       let data = await QuizModel.findOne({ name: action.value });
-      const user = body["user"]["id"];
       if (data && user === data.userId && !data.running) {
         await showGameEditModal(app, body, context, action.value, data);
       } else {
         say("Something went wrong!");
       }
     } else if (action.name === "delete") {
-      //
-      // console.log(action);
       let name = action.value;
       let data = await QuizModel.findOne({ name: action.value });
       const user = body["user"]["id"];
@@ -386,6 +398,14 @@ app.action(
       } else {
         say("Something went wrong!");
       }
+    } else if (action.name === "start") {
+      runCommand(["start", action.value], body, context, say, command, user);
+    } else if (action.name === "stop") {
+      runCommand(["stop", action.value], body, context, say, command, user);
+    } else if (action.name === "pause") {
+      runCommand(["pause", action.value], body, context, say, command, user);
+    } else if (action.name === "resume") {
+      runCommand(["resume", action.value], body, context, say, command, user);
     }
   }
 );
