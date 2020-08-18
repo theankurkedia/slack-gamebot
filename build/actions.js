@@ -3,23 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.showGameList = exports.tickUserScore = exports.getScoreboard = exports.getUserScore = exports.addQuestion = exports.getNextQuestionNumber = exports.cancelGame = exports.startGame = exports.resumeGame = exports.pauseGame = exports.stopGame = exports.setGameType = exports.setExistingQuestionCount = void 0;
+exports.showGameList = exports.getScoreboard = exports.getUserScore = exports.cancelGame = exports.startGame = exports.resumeGame = exports.pauseGame = exports.stopGame = void 0;
 const quizRunner_1 = __importDefault(require("./services/quizRunner"));
 const lodash_1 = require("lodash");
 const Quiz_1 = require("./models/Quiz");
 const Scoreboard_1 = require("./models/Scoreboard");
 const utils_1 = require("./utils");
-const DEFAULT_QUESTIONS_COUNT = 1;
-let questionCount = -1;
 var stringSimilarity = require("string-similarity");
-function setExistingQuestionCount(count) {
-    questionCount = count;
-}
-exports.setExistingQuestionCount = setExistingQuestionCount;
-function setGameType(type) {
-    // sets the game type
-}
-exports.setGameType = setGameType;
 async function stopGame(quiz1) {
     //
     quiz1.running = false;
@@ -100,7 +90,12 @@ The winner${winners.length > 1 ? "s" : ""} of ${quiz1.name} ${winners.length > 1
         app.message(/^.*/, async ({ message, say }) => {
             var _a;
             const answerMatched = stringSimilarity.compareTwoStrings((_a = message.text) === null || _a === void 0 ? void 0 : _a.toLowerCase(), expectedAnswer === null || expectedAnswer === void 0 ? void 0 : expectedAnswer.toLowerCase());
-            console.log("hello here ", answerMatched, answerMatched >= quiz1.config.answerMatchPercentage, userAwardedPointForThisRound);
+            // console.log(
+            //   "hello here ",
+            //   answerMatched,
+            //   answerMatched >= quiz1.config.answerMatchPercentage,
+            //   userAwardedPointForThisRound
+            // );
             if (answerMatched >= quiz1.config.answerMatchPercentage &&
                 !userAwardedPointForThisRound) {
                 // await say(`Hello, <@${message.user}>\nBilkul sahi jawab!!!:tada:`);
@@ -147,27 +142,25 @@ function cancelGame(name) {
     // cancel game
 }
 exports.cancelGame = cancelGame;
-function getNextQuestionNumber() {
-    return questionCount ? ++questionCount : DEFAULT_QUESTIONS_COUNT + 1;
-}
-exports.getNextQuestionNumber = getNextQuestionNumber;
-function addQuestion(type) {
-    // sets the game type
-}
-exports.addQuestion = addQuestion;
-function getUserScore(userId) {
-    // return user score
+function getUserScore(quiz, userId) {
+    if (quiz.scoreboard) {
+        let score = quiz.scoreboard.getUserScore(userId);
+        return `Your score is \`${score}\``;
+    }
+    else {
+        return `No scores found`;
+    }
 }
 exports.getUserScore = getUserScore;
-function getScoreboard(gameId) {
-    return `\`\`\` Ankur  10 \`\`\``;
-    // return scoreboard in sorted order and removing 0 scores
+async function getScoreboard(quiz) {
+    if (quiz.scoreboard) {
+        return `\`\`\`${quiz.scoreboard.getFormattedScoreboard()}\`\`\``;
+    }
+    else {
+        return `No scores found`;
+    }
 }
 exports.getScoreboard = getScoreboard;
-function tickUserScore(userId) {
-    // add user score by 1
-}
-exports.tickUserScore = tickUserScore;
 async function showGameList(app, say, userId, context) {
     const user = userId;
     const quizzes = await Quiz_1.QuizModel.find({ userId: user });

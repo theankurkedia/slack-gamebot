@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateQuestionModal = exports.addQuestionsModal = exports.showGameCreateModal = exports.showGameEditModal = exports.getModalView = exports.openQuestionEditView = void 0;
+exports.updateQuestionModal = exports.addQuestionsModal = exports.showGameCreateModal = exports.showGameEditModal = exports.getModalView = void 0;
 const lodash_1 = require("lodash");
 function getQuestionAnswerElements(number, data, showLastDivider = true) {
     let elements = [];
@@ -57,68 +57,6 @@ function getQuestionAnswerElements(number, data, showLastDivider = true) {
     }
     return elements;
 }
-async function openQuestionEditView(app, body, context, gameName, newQuestion, questionIndex, data) {
-    try {
-        await app.client.views.push({
-            notify_on_close: true,
-            trigger_id: body.trigger_id,
-            token: context.botToken,
-            view_id: body.view.id,
-            view: {
-                type: "modal",
-                callback_id: newQuestion
-                    ? "question_add_callback_id"
-                    : "question_edit_callback_id",
-                title: {
-                    type: "plain_text",
-                    text: "Question" + ` ${questionIndex} - ${gameName}`,
-                },
-                submit: {
-                    type: "plain_text",
-                    text: "Submit",
-                    emoji: true,
-                },
-                close: {
-                    type: "plain_text",
-                    text: "Cancel",
-                    emoji: true,
-                },
-                blocks: [
-                    {
-                        type: "input",
-                        block_id: `question_view`,
-                        element: {
-                            type: "plain_text_input",
-                            initial_value: data ? data.question : undefined,
-                        },
-                        label: {
-                            type: "plain_text",
-                            text: `Question`,
-                            emoji: true,
-                        },
-                    },
-                    {
-                        type: "input",
-                        block_id: `answer_view`,
-                        element: {
-                            type: "plain_text_input",
-                            initial_value: data ? data.answer : undefined,
-                        },
-                        label: {
-                            type: "plain_text",
-                            text: `Answer`,
-                            emoji: true,
-                        },
-                    },
-                ],
-            },
-        });
-    }
-    catch (error) {
-        console.error(error);
-    }
-}
-exports.openQuestionEditView = openQuestionEditView;
 function getConfigElements(data) {
     return [
         {
@@ -134,27 +72,27 @@ function getConfigElements(data) {
         {
             type: "input",
             block_id: "answerMatchPercentage",
-            initial_option: data && lodash_1.get(data, "data.config.answerMatchPercentage")
-                ? data.config.answerMatchPercentage == "0.8"
-                    ? {
-                        text: {
-                            type: "plain_text",
-                            text: "Partial match",
-                            emoji: true,
-                        },
-                        value: "0.8",
-                    }
-                    : {
-                        text: {
-                            type: "plain_text",
-                            text: "Exact match",
-                            emoji: true,
-                        },
-                        value: "1",
-                    }
-                : undefined,
             element: {
                 type: "static_select",
+                initial_option: data && lodash_1.get(data, "config.answerMatchPercentage")
+                    ? data.config.answerMatchPercentage == "0.8"
+                        ? {
+                            text: {
+                                type: "plain_text",
+                                text: "Partial match",
+                                emoji: true,
+                            },
+                            value: "0.8",
+                        }
+                        : {
+                            text: {
+                                type: "plain_text",
+                                text: "Exact match",
+                                emoji: true,
+                            },
+                            value: "1",
+                        }
+                    : undefined,
                 placeholder: {
                     type: "plain_text",
                     text: "Select accuracy",
