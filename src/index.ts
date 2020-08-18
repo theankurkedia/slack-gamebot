@@ -153,7 +153,7 @@ async function runCommand(
         if (quiz) {
           if (user === quiz.userId) {
             stopGame(quiz);
-            say("Game stopped succesfully!");
+            out = "Game stopped succesfully!";
           } else {
             out = "Game is paused! Please resume the game.";
           }
@@ -172,7 +172,7 @@ async function runCommand(
         if (quiz) {
           if (user === quiz.userId && quiz.running && quiz.paused) {
             resumeGame(app, context, say, quiz, channelName);
-            say("Game resumed!");
+            out = "Game resumed!";
           } else {
             if (!quiz.running) {
               out = "Please start the game first!";
@@ -197,7 +197,7 @@ async function runCommand(
         if (quiz) {
           if (user === quiz.userId && quiz.running) {
             pauseGame(app, context, say, quiz, channelName);
-            say("Game paused!");
+            out = "Game paused!";
           } else {
             if (!quiz.running) {
               out = "Please start the game first!";
@@ -341,13 +341,20 @@ app.action(
   async ({ context, ack, action, view, body, say, command }: any) => {
     await ack();
     const user = body["user"]["id"];
+    let messageObj: any = {
+      token: context.botToken,
+      channel: user,
+      user: user,
+      text: "",
+    };
 
     if (action.name === "edit") {
       let data = await QuizModel.findOne({ name: action.value });
       if (data && user === data.userId && !data.running) {
         await showGameEditModal(app, body, context, action.value, data);
       } else {
-        say("Something went wrong!");
+        messageObj.text = "Error occured!";
+        await app.client.chat.postEphemeral(messageObj);
       }
     } else if (action.name === "delete") {
       let name = action.value;
@@ -355,13 +362,19 @@ app.action(
       const user = body["user"]["id"];
 
       if (data && user === data.userId && !data.running) {
-        QuizModel.deleteOne({ name }, function(err: any) {
-          if (err) return say("Something went wrong!");
+        QuizModel.deleteOne({ name }, async function(err: any) {
+          if (err) {
+            messageObj.text = "Error occured!";
+          } else {
+            messageObj.text = `Quiz \`${name}\` deleted successfully.`;
+          }
           // deleted at most one tank document
-          say(`Quiz \`${name}\` deleted successfully.`);
+
+          await app.client.chat.postEphemeral(messageObj);
         });
       } else {
-        say("Something went wrong!");
+        messageObj.text = "Error occured!";
+        await app.client.chat.postEphemeral(messageObj);
       }
     } else if (action.name === "start") {
       runCommand(["start", action.value], body, context, say, command, user);
