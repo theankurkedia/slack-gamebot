@@ -13,8 +13,7 @@ import {
 import {
   showGameCreateModal,
   showGameEditModal,
-  openQuestionEditView,
-  getModalView,
+  updateQuestionModal,
   addQuestionsModal,
 } from "./views";
 import mongoose from "mongoose";
@@ -355,7 +354,7 @@ app.action(
       const user = body["user"]["id"];
 
       if (data && user === data.userId && !data.running) {
-        QuizModel.deleteOne({ name }, function(err: any) {
+        QuizModel.deleteOne({ name }, function (err: any) {
           if (err) return say("Something went wrong!");
           // deleted at most one tank document
           say(`Quiz \`${name}\` deleted successfully.`);
@@ -386,7 +385,11 @@ app.action(
         context,
         name,
         quiz.questions.length,
-        get(body, "view.callback_id") === "modal_create_callback_id",
+        get(body, "view.callback_id") === "modal_create_callback_id"
+          ? "new"
+          : get(body, "view.callback_id") === "modal_edit_callback_id"
+          ? "edit"
+          : "addQuestions",
         quiz
       );
     }
@@ -514,7 +517,7 @@ app.view(
       channel: user,
       text: "",
     };
-    quiz.save(async function(err: any) {
+    quiz.save(async function (err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -598,7 +601,7 @@ app.view(
     } else {
       // quiz.addAllQuestions(quizFormData.questions);
 
-      quiz.save(async function(err: any) {
+      quiz.save(async function (err: any) {
         if (err) {
           messageObj.text = `There was an error with your submission \n \`${err.message}\``;
         } else {

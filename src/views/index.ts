@@ -343,28 +343,28 @@ export async function addQuestionsModal(
     return null;
   }
 }
-// export async function updateQuestionModal(
-//   app: any,
-//   body: any,
-//   context: any,
-//   gameName: string,
-//   questionNos: number,
-//   newQuiz: boolean,
-//   data: any
-// ) {
-//   try {
-//     await app.client.views.update(
-//       getModalView(
-//         body,
-//         context,
-//         gameName,
-//         questionNos,
-//         newQuiz,
-//         body.view.id,
-//         data
-//       )
-//     );
-//   } catch (error) {
-//     console.error(error);
-//   }
-// }
+export async function updateQuestionModal(
+  app: any,
+  body: any,
+  context: any,
+  gameName: string,
+  questionNos: number,
+  callbackContext: "new" | "edit" | "addQuestions",
+  data: any
+) {
+  try {
+    await app.client.views.update(
+      getModalView(
+        body,
+        context,
+        gameName,
+        questionNos,
+        callbackContext,
+        body.view.id,
+        data
+      )
+    );
+  } catch (error) {
+    console.error(error);
+  }
+}
