@@ -121,30 +121,128 @@ export async function openQuestionEditView(
     console.error(error);
   }
 }
+function getConfigElements(data: any) {
+  return [
+    {
+      type: "context",
+      elements: [
+        {
+          type: "plain_text",
+          text: "Set Config",
+          emoji: true,
+        },
+      ],
+    },
+    {
+      type: "input",
+      block_id: "answerMatchPercentage",
+      initial_option:
+        data && get(data, "data.config.answerMatchPercentage")
+          ? data.config.answerMatchPercentage == "0.8"
+            ? {
+                text: {
+                  type: "plain_text",
+                  text: "Partial match",
+                  emoji: true,
+                },
+                value: "0.8",
+              }
+            : {
+                text: {
+                  type: "plain_text",
+                  text: "Exact match",
+                  emoji: true,
+                },
+                value: "1",
+              }
+          : undefined,
+      element: {
+        type: "static_select",
+        placeholder: {
+          type: "plain_text",
+          text: "Select accuracy",
+          emoji: true,
+        },
+        options: [
+          {
+            text: {
+              type: "plain_text",
+              text: "Partial match",
+              emoji: true,
+            },
+            value: "0.8",
+          },
+          {
+            text: {
+              type: "plain_text",
+              text: "Exact match",
+              emoji: true,
+            },
+            value: "1",
+          },
+        ],
+      },
+      label: {
+        type: "plain_text",
+        text: "Answer accuracy",
+        emoji: true,
+      },
+    },
+    {
+      type: "input",
+      block_id: "timePerQuestion",
+      element: {
+        type: "plain_text_input",
+        initial_value:
+          data && get(data, "config.timePerQuestion")
+            ? get(data, "config.timePerQuestion").toString()
+            : undefined,
+        placeholder: {
+          type: "plain_text",
+          text: "Enter the time in seconds",
+        },
+      },
+      label: {
+        type: "plain_text",
+        text: "Time per question",
+        emoji: true,
+      },
+    },
+  ];
+}
 export function getModalView(
   body: any,
   context: any,
   gameName: string,
   questionNos: number,
-  newQuiz?: boolean,
+  callbackContext: "new" | "edit" | "addQuestions",
   viewId?: string,
   data?: any
 ) {
   const questionElements = getQuestionAnswerElements(questionNos, data);
+  const configElements =
+    callbackContext !== "addQuestions" ? getConfigElements(data) : [];
   return {
     token: context.botToken,
     view_id: viewId,
     trigger_id: body.trigger_id,
     view: {
       type: "modal",
-      callback_id: newQuiz
-        ? "modal_create_callback_id"
-        : "modal_edit_callback_id",
+      callback_id:
+        callbackContext === "new"
+          ? "modal_create_callback_id"
+          : callbackContext === "edit"
+          ? "modal_edit_callback_id"
+          : "modal_add_questions_callback_id",
       title: {
         type: "plain_text",
-        text: `${newQuiz ? "Create Game" : "Edit Game"} - ${capitalize(
-          gameName
-        )}`,
+        text: `${
+          callbackContext === "new"
+            ? "Create"
+            : callbackContext === "edit"
+            ? "Edit"
+            : ""
+        } Game - ${capitalize(gameName)}`,
         emoji: false,
       },
       submit: {
@@ -163,97 +261,15 @@ export function getModalView(
           elements: [
             {
               type: "plain_text",
-              text: `${data ? `Add ` : `Edit `} Questions`,
+              text: `${
+                callbackContext === "edit" ? `Edit ` : `Add `
+              } Questions`,
               emoji: true,
             },
           ],
         },
         ...questionElements,
-        {
-          type: "context",
-          elements: [
-            {
-              type: "plain_text",
-              text: "Set Config",
-              emoji: true,
-            },
-          ],
-        },
-        {
-          type: "input",
-          block_id: "answerMatchPercentage",
-          initial_option:
-            data && get(data, "data.config.answerMatchPercentage")
-              ? data.config.answerMatchPercentage == "0.8"
-                ? {
-                    text: {
-                      type: "plain_text",
-                      text: "Partial match",
-                      emoji: true,
-                    },
-                    value: "0.8",
-                  }
-                : {
-                    text: {
-                      type: "plain_text",
-                      text: "Exact match",
-                      emoji: true,
-                    },
-                    value: "1",
-                  }
-              : undefined,
-          element: {
-            type: "static_select",
-            placeholder: {
-              type: "plain_text",
-              text: "Select accuracy",
-              emoji: true,
-            },
-            options: [
-              {
-                text: {
-                  type: "plain_text",
-                  text: "Partial match",
-                  emoji: true,
-                },
-                value: "0.8",
-              },
-              {
-                text: {
-                  type: "plain_text",
-                  text: "Exact match",
-                  emoji: true,
-                },
-                value: "1",
-              },
-            ],
-          },
-          label: {
-            type: "plain_text",
-            text: "Answer accuracy",
-            emoji: true,
-          },
-        },
-        {
-          type: "input",
-          block_id: "timePerQuestion",
-          element: {
-            type: "plain_text_input",
-            initial_value:
-              data && get(data, "config.timePerQuestion")
-                ? get(data, "config.timePerQuestion").toString()
-                : undefined,
-            placeholder: {
-              type: "plain_text",
-              text: "Enter the time in seconds",
-            },
-          },
-          label: {
-            type: "plain_text",
-            text: "Time per question",
-            emoji: true,
-          },
-        },
+        ...configElements,
       ],
     },
   };
@@ -272,7 +288,7 @@ export async function showGameEditModal(
         context,
         gameName,
         data ? data.questions.length : 1,
-        false,
+        "edit",
         undefined,
         data
       )
@@ -291,35 +307,51 @@ export async function showGameCreateModal(
 ) {
   try {
     await app.client.views.open(
-      getModalView(body, context, name, initialQuestions, true)
+      getModalView(body, context, name, initialQuestions, "new")
     );
   } catch (error) {
     console.error(error);
     return null;
   }
 }
-export async function updateQuestionModal(
+export async function addQuestionsModal(
   app: any,
   body: any,
   context: any,
-  gameName: string,
-  questionNos: number,
-  newQuiz: boolean,
-  data: any
+  name: string,
+  questionNos: number
 ) {
   try {
-    await app.client.views.update(
-      getModalView(
-        body,
-        context,
-        gameName,
-        questionNos,
-        newQuiz,
-        body.view.id,
-        data
-      )
+    await app.client.views.open(
+      getModalView(body, context, name, questionNos, "addQuestions")
     );
   } catch (error) {
     console.error(error);
+    return null;
   }
 }
+// export async function updateQuestionModal(
+//   app: any,
+//   body: any,
+//   context: any,
+//   gameName: string,
+//   questionNos: number,
+//   newQuiz: boolean,
+//   data: any
+// ) {
+//   try {
+//     await app.client.views.update(
+//       getModalView(
+//         body,
+//         context,
+//         gameName,
+//         questionNos,
+//         newQuiz,
+//         body.view.id,
+//         data
+//       )
+//     );
+//   } catch (error) {
+//     console.error(error);
+//   }
+// }

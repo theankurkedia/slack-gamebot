@@ -11,12 +11,11 @@ import {
 } from "./actions";
 import {
   showGameCreateModal,
-  updateQuestionModal,
   showGameEditModal,
   openQuestionEditView,
   getModalView,
+  addQuestionsModal,
 } from "./views";
-const DEFAULT_QUESTIONS_COUNT = 5;
 import mongoose from "mongoose";
 import { QuestionModel } from "./models/Question";
 import { QuizModel } from "./models/Quiz";
@@ -147,13 +146,15 @@ app.message("list", async ({ say, context, message }) => {
 //   //   }
 //   // });
 // });
-const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <questionNos = 5> - create a new game
-/${process.env.COMMAND_NAME} cancel <id> - cancel the creation of game
+const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <questionNos = 5> - create a new game
+/${process.env.COMMAND_NAME} edit <gameName> - edit existing game
+/${process.env.COMMAND_NAME} addQuestions <gameName> <questionNos = 1> - edit existing game
+/${process.env.COMMAND_NAME} cancel <gameName> - cancel the creation of game
 /${process.env.COMMAND_NAME} help  - list out the commands
 /${process.env.COMMAND_NAME} list  - list of all games
-/${process.env.COMMAND_NAME} start <id> - start the game
-/${process.env.COMMAND_NAME} assign <id> <name> @<channel>
-/${process.env.COMMAND_NAME} result <id> <name> - find the result of person \`\`\``;
+/${process.env.COMMAND_NAME} start <gameName> - start the game
+/${process.env.COMMAND_NAME} assign <gameName> <name> @<channel>
+/${process.env.COMMAND_NAME} result <gameName> <name> - find the result of person \`\`\``;
 
 // app.message("t", async ({ say, context, body }) => {
 //   console.log("je;;p", body);
@@ -171,21 +172,20 @@ app.command(
     let out;
     await ack();
     let textArray = command.text.split(" ");
-
+    let gameName;
     switch (textArray[0]) {
       case "create":
-        let gameName = textArray[1];
+        gameName = textArray[1];
         if (gameName) {
           let questionNos = textArray[2];
           let data = await QuizModel.findOne({ name: gameName });
           if (!data) {
-            // setExistingQuestionCount(questionNos DEFAULT_QUESTIONS_COUNT);
             await showGameCreateModal(
               app,
               body,
               context,
               textArray[1],
-              questionNos ? Number(questionNos) : DEFAULT_QUESTIONS_COUNT
+              questionNos ? Number(questionNos) : 5
             );
           } else {
             out = ":warning: Game already exists :warning:";
@@ -202,10 +202,30 @@ app.command(
           if (data && user === data.userId) {
             await showGameEditModal(app, body, context, textArray[1], data);
           } else {
-            out = "Game does not exist";
+            out = ":warning: Game does not exist :warning:";
           }
         } else {
           out = "Please enter game id";
+        }
+        break;
+      case "addQuestions":
+        gameName = textArray[1];
+        if (gameName) {
+          let questionNos = textArray[2];
+          let data = await QuizModel.findOne({ name: gameName });
+          if (data) {
+            await addQuestionsModal(
+              app,
+              body,
+              context,
+              textArray[1],
+              questionNos ? Number(questionNos) : 1
+            );
+          } else {
+            out = ":warning: Game does not exist :warning:";
+          }
+        } else {
+          out = "Please enter name for the game";
         }
         break;
       case "start":
@@ -456,6 +476,42 @@ app.view(
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
         messageObj.text = `Quiz created successfully.`;
+        messageObj.attachments = [getButtonAttachment(quiz)];
+      }
+      // Message the user
+      try {
+        await app.client.chat.postMessage(messageObj);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+  }
+);
+app.view(
+  "modal_add_questions_callback_id",
+  async ({ ack, context, view, body }: any) => {
+    await ack();
+    const user = body["user"]["id"];
+    let quizName = getGameNameFromView(view);
+    let quizFormData = getQuizFormData(view);
+    let quiz = await QuizModel.findOne({ name: quizName });
+    let existingQuestionLength = quiz.questions.length;
+    if (quizFormData.questions) {
+      quizFormData.questions.forEach((questionObj: any, index: number) => {
+        quiz.addQuestion(questionObj, existingQuestionLength + index + 1);
+      });
+    }
+
+    let messageObj: any = {
+      token: context.botToken,
+      channel: user,
+      text: "",
+    };
+    quiz.save(async function (err: any) {
+      if (err) {
+        messageObj.text = `There was an error with your submission \n \`${err.message}\``;
+      } else {
+        messageObj.text = `Question added successfully.`;
         messageObj.attachments = [getButtonAttachment(quiz)];
       }
       // Message the user
