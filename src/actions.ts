@@ -205,9 +205,8 @@ export async function showGameList(
   context: any,
   body: any
 ) {
-  const user = userId;
-  const quizzes = await QuizModel.find({ userId: user });
-  if (quizzes.length) {
+  const quizes = await QuizModel.find({ userId });
+  if (quizes && quizes.length) {
     let message: any = {
       token: context.botToken,
       channel: body.channel_name,
@@ -215,17 +214,12 @@ export async function showGameList(
       text: "List of games.",
       attachments: [],
     };
-
-    forEach(quizzes, (quiz) => {
+    forEach(quizes, (quiz) => {
       const attachment: any = getButtonAttachment(quiz);
       message.attachments.push(attachment);
     });
-
     await app.client.chat.postEphemeral(message);
-
-    // postEphemeral
-    // say(message);
   } else {
-    await app.client.chat.postEphemeral(`No quizzes found!`);
+    await app.client.chat.postEphemeral(`No quizes found!`);
   }
 }
