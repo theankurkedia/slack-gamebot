@@ -93,9 +93,9 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <ques
 /${process.env.COMMAND_NAME} cancel <gameName> - cancel the creation of game
 /${process.env.COMMAND_NAME} help  - list out the commands
 /${process.env.COMMAND_NAME} list  - list of all games
-/${process.env.COMMAND_NAME} start <id> - start the game
-/${process.env.COMMAND_NAME} assign <id> <name> @<channel>
-/${process.env.COMMAND_NAME} result <id> <name> - find the result of person \`\`\``;
+/${process.env.COMMAND_NAME} start <gameName> - start the game
+/${process.env.COMMAND_NAME} assign <gameName> <name> @<channel>
+/${process.env.COMMAND_NAME} myScore <gameName> - find the result of person \`\`\``;
 
 async function runCommand(
   textArray: any,
@@ -136,10 +136,10 @@ async function runCommand(
         if (data && user === data.userId) {
           await showGameEditModal(app, body, context, textArray[1], data);
         } else {
-          out = ":warning: Game does not exist :warning:";
+          out = ":warning: Game does not exist! :warning:";
         }
       } else {
-        out = "Game does not exist";
+        out = "Please enter game name!";
       }
       break;
     case "addQuestions": {
@@ -156,7 +156,7 @@ async function runCommand(
             questionNos ? Number(questionNos) : 1
           );
         } else {
-          out = ":warning: Game does not exist :warning:";
+          out = ":warning: Game does not exist! :warning:";
         }
       } else {
         out = "Please enter name for the game";
@@ -166,31 +166,34 @@ async function runCommand(
     case "start":
       const channelName = body.channel_name;
       let quiz = await QuizModel.findOne({ name: textArray[1] });
-
-      if (user === quiz.userId && !quiz.running && !quiz.paused) {
-        startGame(app, context, say, quiz, channelName);
-      } else {
-        if (!quiz.running) {
-          out = "Please start the game first!";
-        } else if (quiz.paused) {
-          out = "Game is paused! Please resume the game.";
+      if (quiz) {
+        if (user === quiz.userId && !quiz.running && !quiz.paused) {
+          startGame(app, context, say, quiz, channelName);
         } else {
-          out = "Game not Found!";
+          if (!quiz.running) {
+            out = "Please start the game first!";
+          } else if (quiz.paused) {
+            out = "Game is paused! Please resume the game.";
+          } else {
+            out = ":warning: Game does not exist! :warning:";
+          }
         }
+      } else {
+        out = ":warning: Game does not exist! :warning:";
       }
       break;
 
     case "stop": {
-      const channelName = body.channel_name;
       let quiz = await QuizModel.findOne({ name: textArray[1] });
-
-      console.log(user, textArray[1]);
-
-      if (user === quiz.userId) {
-        stopGame(quiz);
-        say("Game stopped succesfully!");
+      if (quiz) {
+        if (user === quiz.userId) {
+          stopGame(quiz);
+          say("Game stopped succesfully!");
+        } else {
+          out = "Game is paused! Please resume the game.";
+        }
       } else {
-        out = "Game not found!";
+        out = ":warning: Game does not exist! :warning:";
       }
       break;
     }
@@ -198,32 +201,40 @@ async function runCommand(
     case "resume": {
       const channelName = body.channel_name;
       let quiz = await QuizModel.findOne({ name: textArray[1] });
-      if (user === quiz.userId && quiz.running && quiz.paused) {
-        resumeGame(app, context, say, quiz, channelName);
-        say("Game resumed!");
-      } else {
-        if (!quiz.running) {
-          out = "Please start the game first!";
-        } else if (!quiz.paused) {
-          out = "Game is already running!";
+      if (quiz) {
+        if (user === quiz.userId && quiz.running && quiz.paused) {
+          resumeGame(app, context, say, quiz, channelName);
+          say("Game resumed!");
         } else {
-          out = "Game not Found!";
+          if (!quiz.running) {
+            out = "Please start the game first!";
+          } else if (!quiz.paused) {
+            out = "Game is already running!";
+          } else {
+            out = "Game is paused! Please resume the game.";
+          }
         }
+      } else {
+        out = ":warning: Game does not exist! :warning:";
       }
       break;
     }
     case "pause": {
       const channelName = body.channel_name;
       let quiz = await QuizModel.findOne({ name: textArray[1] });
-      if (user === quiz.userId && quiz.running) {
-        pauseGame(app, context, say, quiz, channelName);
-        say("Game paused!");
-      } else {
-        if (!quiz.running) {
-          out = "Please start the game first!";
+      if (quiz) {
+        if (user === quiz.userId && quiz.running) {
+          pauseGame(app, context, say, quiz, channelName);
+          say("Game paused!");
         } else {
-          out = "Game not Found!";
+          if (!quiz.running) {
+            out = "Please start the game first!";
+          } else {
+            out = ":warning: Game does not exist! :warning:";
+          }
         }
+      } else {
+        out = ":warning: Game does not exist! :warning:";
       }
       break;
     }
@@ -232,14 +243,17 @@ async function runCommand(
       const channelName = body.channel_name;
       let quiz = await QuizModel.findOne({ name: textArray[1] });
       let user = body.user_id;
-
-      if (user === quiz.userId) {
-        stopGame(quiz);
-        setTimeout(() => {
-          startGame(app, context, say, quiz, channelName);
-        }, 1000);
+      if (quiz) {
+        if (user === quiz.userId) {
+          stopGame(quiz);
+          setTimeout(() => {
+            startGame(app, context, say, quiz, channelName);
+          }, 1000);
+        } else {
+          out = ":warning: Game does not exist! :warning:";
+        }
       } else {
-        out = "Game not found!";
+        out = ":warning: Game does not exist! :warning:";
       }
       break;
     }
@@ -248,7 +262,7 @@ async function runCommand(
         out = "Cancelling the game";
         cancelGame(textArray[1]);
       } else {
-        out = "Game does not exist";
+        out = ":warning: Game does not exist! :warning:";
       }
       break;
 
@@ -261,10 +275,29 @@ async function runCommand(
       out = commandsList;
       break;
     case "scoreboard":
-      out = getScoreboard("game");
+      if (textArray[1]) {
+        let quiz = await QuizModel.findOne({ name: textArray[1] });
+        if (quiz) {
+          out = await getScoreboard(quiz);
+        } else {
+          out = ":warning: Game does not exist! :warning:";
+        }
+      } else {
+        out = "Please enter name for the game";
+      }
       break;
-    case "score":
-      out = getUserScore(command.user_id);
+    case "myScore":
+      if (textArray[1]) {
+        let quiz = await QuizModel.findOne({ name: textArray[1] });
+        if (quiz) {
+          out = await getUserScore(quiz, command.user_id);
+        } else {
+          out = ":warning: Game does not exist! :warning:";
+        }
+      } else {
+        out = "Please enter name for the game!";
+      }
+      break;
       break;
     default:
       out = `<@${command.user_id}> ${command.text}`;
