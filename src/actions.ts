@@ -202,14 +202,15 @@ export async function showGameList(
   app: any,
   say: any,
   userId: any,
-  context: any
+  context: any,
+  body: any
 ) {
   const user = userId;
   const quizzes = await QuizModel.find({ userId: user });
   if (quizzes.length) {
     let message: any = {
       token: context.botToken,
-      channel: userId,
+      channel: body.channel_name,
       user: userId,
       text: "List of games.",
       attachments: [],

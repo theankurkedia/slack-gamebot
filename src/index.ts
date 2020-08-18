@@ -285,8 +285,7 @@ async function runCommand(
       }
       break;
     case "list":
-      let user1 = body.user_id;
-      await showGameList(app, say, user1, context);
+      await showGameList(app, say, user, context, body);
       // TODO: can show a modal for this
       break;
     case "help":
@@ -323,7 +322,7 @@ async function runCommand(
   if (out) {
     let message: any = {
       token: context.botToken,
-      channel: user,
+      channel: body.channel_name,
       user: user,
       text: out,
       attachments: [],
@@ -397,7 +396,7 @@ app.action(
       const user = body["user"]["id"];
 
       if (data && user === data.userId && !data.running) {
-        QuizModel.deleteOne({ name }, function (err: any) {
+        QuizModel.deleteOne({ name }, function(err: any) {
           if (err) return say("Something went wrong!");
           // deleted at most one tank document
           say(`Quiz \`${name}\` deleted successfully.`);
@@ -473,7 +472,7 @@ app.view(
       user: user,
       text: "",
     };
-    quiz.save(async function (err: any) {
+    quiz.save(async function(err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -510,7 +509,7 @@ app.view(
       user: user,
       text: "",
     };
-    quiz.save(async function (err: any) {
+    quiz.save(async function(err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -536,7 +535,7 @@ app.view(
     let quizName = getGameNameFromView(view);
     let quizFormData = getQuizFormData(view);
 
-    console.log(quizFormData, "hello here");
+    console.log(action, view, body, "hello here");
     let quiz = await QuizModel.findOne({ name: quizName });
 
     let messageObj: any = {
@@ -560,7 +559,7 @@ app.view(
     } else {
       quiz.addAllQuestions(quizFormData.questions);
       quiz.config = quizFormData.config;
-      quiz.save(async function (err: any) {
+      quiz.save(async function(err: any) {
         if (err) {
           messageObj.text = `There was an error with your submission \n \`${err.message}\``;
         } else {
