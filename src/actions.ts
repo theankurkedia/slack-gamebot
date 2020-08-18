@@ -124,14 +124,11 @@ The winner of ${quiz1.name} is :drum_with_drumsticks: :drum_with_drumsticks: :dr
             `,
           });
           setTimeout(async () => {
-            const winnerText = winner
-              ? `<@${winner}> :tada::tada::tada:`
-              : `No one :cry:`;
             await app.client.chat.postMessage({
               // The token you used to initialize your app is stored in the `context` object
               token: context.botToken,
               channel: `#${channelName}`,
-              text: winnerText,
+              text: `<@${winner}> :tada::tada::tada:`,
             });
 
             quiz1.running = false;
