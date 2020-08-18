@@ -5,9 +5,7 @@ import {
   getUserScore,
   startGame,
   cancelGame,
-  getNextQuestionNumber,
   showGameList,
-  setExistingQuestionCount,
   stopGame,
   resumeGame,
   pauseGame,
@@ -16,21 +14,12 @@ import {
   showGameCreateModal,
   updateQuestionModal,
   showGameEditModal,
-  openQuestionEditView,
-  getModalView,
   addQuestionsModal,
 } from "./views";
-const DEFAULT_QUESTIONS_COUNT = 5;
 import mongoose from "mongoose";
 import { QuizModel } from "./models/Quiz";
-import {
-  getButtonAttachment,
-  getGameNameFromView,
-  getQuestionNumberFromView,
-  getValueFromView,
-  getQuestionIndex,
-} from "./utils";
-import { forEach, get, isEmpty } from "lodash";
+import { getButtonAttachment, getGameNameFromView } from "./utils";
+import { get } from "lodash";
 import { getQuizFormData } from "./getQuizFormData";
 var stringSimilarity = require("string-similarity");
 
@@ -107,16 +96,6 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <ques
 /${process.env.COMMAND_NAME} start <id> - start the game
 /${process.env.COMMAND_NAME} assign <id> <name> @<channel>
 /${process.env.COMMAND_NAME} result <id> <name> - find the result of person \`\`\``;
-
-// app.message("t", async ({ say, context, body }) => {
-//   console.log("je;;p", body);
-//   const user = body.event.user;
-
-//   const quiz = await QuizModel.findOne({ name: 1 });
-
-//   console.log(quiz.updateUserScore(quiz.userId, 10));
-//   await say(`User Details: ${user}`);
-// });
 
 async function runCommand(
   textArray: any,
@@ -361,7 +340,7 @@ app.action(
       const user = body["user"]["id"];
 
       if (data && user === data.userId && !data.running) {
-        QuizModel.deleteOne({ name }, function(err: any) {
+        QuizModel.deleteOne({ name }, function (err: any) {
           if (err) return say("Something went wrong!");
           // deleted at most one tank document
           say(`Quiz \`${name}\` deleted successfully.`);
@@ -436,7 +415,7 @@ app.view(
       channel: user,
       text: "",
     };
-    quiz.save(async function(err: any) {
+    quiz.save(async function (err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -472,7 +451,7 @@ app.view(
       channel: user,
       text: "",
     };
-    quiz.save(async function(err: any) {
+    quiz.save(async function (err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -520,7 +499,7 @@ app.view(
     } else {
       quiz.addAllQuestions(quizFormData.questions);
       quiz.config = quizFormData.config;
-      quiz.save(async function(err: any) {
+      quiz.save(async function (err: any) {
         if (err) {
           messageObj.text = `There was an error with your submission \n \`${err.message}\``;
         } else {

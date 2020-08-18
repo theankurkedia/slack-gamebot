@@ -59,74 +59,6 @@ function getQuestionAnswerElements(
   }
   return elements;
 }
-export async function openQuestionEditView(
-  app: any,
-  body: any,
-  context: any,
-  gameName: string,
-  newQuestion: boolean,
-  questionIndex: number,
-  data?: any
-) {
-  try {
-    await app.client.views.push({
-      notify_on_close: true,
-      trigger_id: body.trigger_id,
-      token: context.botToken,
-      view_id: body.view.id,
-      view: {
-        type: "modal",
-        callback_id: newQuestion
-          ? "question_add_callback_id"
-          : "question_edit_callback_id",
-        title: {
-          type: "plain_text",
-          text: "Question" + ` ${questionIndex} - ${gameName}`,
-        },
-        submit: {
-          type: "plain_text",
-          text: "Submit",
-          emoji: true,
-        },
-        close: {
-          type: "plain_text",
-          text: "Cancel",
-          emoji: true,
-        },
-        blocks: [
-          {
-            type: "input",
-            block_id: `question_view`,
-            element: {
-              type: "plain_text_input",
-              initial_value: data ? data.question : undefined,
-            },
-            label: {
-              type: "plain_text",
-              text: `Question`,
-              emoji: true,
-            },
-          },
-          {
-            type: "input",
-            block_id: `answer_view`,
-            element: {
-              type: "plain_text_input",
-              initial_value: data ? data.answer : undefined,
-            },
-            label: {
-              type: "plain_text",
-              text: `Answer`,
-              emoji: true,
-            },
-          },
-        ],
-      },
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
 function getConfigElements(data: any) {
   return [
     {
@@ -142,28 +74,28 @@ function getConfigElements(data: any) {
     {
       type: "input",
       block_id: "answerMatchPercentage",
-      initial_option:
-        data && get(data, "data.config.answerMatchPercentage")
-          ? data.config.answerMatchPercentage == "0.8"
-            ? {
-                text: {
-                  type: "plain_text",
-                  text: "Partial match",
-                  emoji: true,
-                },
-                value: "0.8",
-              }
-            : {
-                text: {
-                  type: "plain_text",
-                  text: "Exact match",
-                  emoji: true,
-                },
-                value: "1",
-              }
-          : undefined,
       element: {
         type: "static_select",
+        initial_option:
+          data && get(data, "config.answerMatchPercentage")
+            ? data.config.answerMatchPercentage == "0.8"
+              ? {
+                  text: {
+                    type: "plain_text",
+                    text: "Partial match",
+                    emoji: true,
+                  },
+                  value: "0.8",
+                }
+              : {
+                  text: {
+                    type: "plain_text",
+                    text: "Exact match",
+                    emoji: true,
+                  },
+                  value: "1",
+                }
+            : undefined,
         placeholder: {
           type: "plain_text",
           text: "Select accuracy",
