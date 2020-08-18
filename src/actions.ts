@@ -17,41 +17,21 @@ export function setGameType(type: string) {
   // sets the game type
 }
 
-export async function stopGame(
-  app: App,
-  context: Context,
-  say: SayFn,
-  quiz1: any,
-  channelName: string
-) {
+export async function stopGame(quiz1: any) {
   //
   quiz1.running = false;
-  quiz1.save();
+  quiz1.paused = false;
+  await quiz1.save();
 }
-export async function startGame(
+
+function playGame(
   app: App,
   context: Context,
   say: SayFn,
   quiz1: any,
   channelName: string
 ) {
-  say(
-    "Hello everyone!\nLet's start the game.\nThe first question is coming up in 5 seconds."
-  );
-
-  quiz1.running = true;
-  quiz1.currentQuestionIndex = 0;
-  quiz1.save();
-  console.log(quiz1.config, "hello quiz");
-
-  // quiz1 = {
-  //   ...quiz1,
-  //   scoreboard: new ScoreBoard(),
-  // };
-  const scoreboard = new ScoreBoard();
-
-  // start game
-
+  const scoreboard = quiz1.scoreboard;
   setTimeout(() => {
     let expectedAnswer: string | null = null;
     let userAwardedPointForThisRound: string = "";
@@ -64,27 +44,11 @@ export async function startGame(
           text: `\`Question (${index + 1}/${quiz1.questions.length}):\` ${
             question.question
           }`,
-          // blocks: [
-          //   {
-          //     type: "section",
-          //     text: {
-          //       type: "mrkdwn",
-          //       text: `Hey there <@himanshu>!`,
-          //     },
-          //     accessory: {
-          //       type: "button",
-          //       text: {
-          //         type: "plain_text",
-          //         text: "Click Me",
-          //       },
-          //       action_id: "button_click",
-          //     },
-          //   },
-          // ],
         });
         expectedAnswer = question.answer;
       },
       postScoreboard: async (question: any, index: number) => {
+        scoreboard.save();
         const formattedScoreboard = scoreboard.getFormattedScoreboard();
 
         console.log(formattedScoreboard, "format");
@@ -136,8 +100,8 @@ The winner${winners.length > 1 ? "s" : ""} of ${quiz1.name} ${
                 ? `${winnersString} :tada::tada::tada:`
                 : `No one :cry:`,
             });
-            quiz1.running = false;
-            quiz1.save();
+
+            stopGame(quiz1);
           }, 3000);
         }
         // }
@@ -152,9 +116,14 @@ The winner${winners.length > 1 ? "s" : ""} of ${quiz1.name} ${
         message.text?.toLowerCase(),
         expectedAnswer?.toLowerCase()
       );
-      console.log("hello here ", answerMatched);
+      console.log(
+        "hello here ",
+        answerMatched,
+        answerMatched >= quiz1.config.answerMatchPercentage,
+        userAwardedPointForThisRound
+      );
       if (
-        answerMatched >= quiz1.answerMatchPercentage &&
+        answerMatched >= quiz1.config.answerMatchPercentage &&
         !userAwardedPointForThisRound
       ) {
         // await say(`Hello, <@${message.user}>\nBilkul sahi jawab!!!:tada:`);
@@ -171,38 +140,53 @@ The winner${winners.length > 1 ? "s" : ""} of ${quiz1.name} ${
       }
     });
   }, 5000);
+}
 
-  app.action("button_click", async ({ context, ack, say }) => {
-    ack();
-    // await app.client.chat.postMessage({
-    //   // The token you used to initialize your app is stored in the `context` object
-    //   token: context.botToken,
-    //   channel: `#${channelName}`,
-    //   text: "Button clicked",
-    // });
-    await say("wdwdwdw");
-  });
+export async function pauseGame(
+  app: App,
+  context: Context,
+  say: SayFn,
+  quiz1: any,
+  channelName: string
+) {
+  //
+  quiz1.paused = true;
+  await quiz1.save();
+}
+export async function resumeGame(
+  app: App,
+  context: Context,
+  say: SayFn,
+  quiz1: any,
+  channelName: string
+) {
+  //
+  quiz1.paused = false;
+  await quiz1.save();
 
-  // await say({
-  //   blocks: [
-  //     {
-  //       "type": "section",
-  //       "text": {
-  //         "type": "mrkdwn",
-  //         "text": `Hey there <@${message.user}>!`
-  //       },
-  //       "accessory": {
-  //         "type": "button",
-  //         "text": {
-  //           "type": "plain_text",
-  //           "text": "Click Me"
-  //         },
-  //         "action_id": "button_click"
-  //       }
-  //     }
-  //   ],
-  //   text: `Hey there <@${message.user}>!`
-  // });
+  playGame(app, context, say, quiz1, channelName);
+}
+
+export async function startGame(
+  app: App,
+  context: Context,
+  say: SayFn,
+  quiz1: any,
+  channelName: string
+) {
+  say(
+    "Hello everyone!\nLet's start the game.\nThe first question is coming up in 5 seconds."
+  );
+
+  quiz1.running = true;
+  quiz1.paused = false;
+  quiz1.currentQuestionIndex = 0;
+  await quiz1.save();
+
+  const scoreboard = new ScoreboardModel();
+  quiz1.scoreboard = scoreboard;
+
+  playGame(app, context, say, quiz1, channelName);
 }
 export function cancelGame(name: string) {
   // cancel game

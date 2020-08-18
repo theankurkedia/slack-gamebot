@@ -1,10 +1,14 @@
-function run(quiz: any, callbacks: any) {
+import { QuizModel } from "../models/Quiz";
+
+async function run(inputQuiz: any, callbacks: any) {
+  let quiz = await QuizModel.findOne({ name: inputQuiz.name });
   const timePerQuestion = quiz.config.timePerQuestion * 1000; // in milliseconds
 
   const index = quiz.currentQuestionIndex;
   const question = quiz.questions[index];
 
-  if (question) {
+  console.log("quiz here", quiz.paused);
+  if (question && quiz.running && !quiz.paused) {
     quiz.currentQuestionIndex = index + 1;
     quiz.save();
     callbacks.postQuestion(question, index);

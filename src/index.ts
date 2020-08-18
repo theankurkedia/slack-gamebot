@@ -9,6 +9,8 @@ import {
   showGameList,
   setExistingQuestionCount,
   stopGame,
+  resumeGame,
+  pauseGame,
 } from "./actions";
 import {
   showGameCreateModal,
@@ -214,10 +216,16 @@ app.command(
         let quiz = await QuizModel.findOne({ name: textArray[1] });
         let user = body.user_id;
 
-        if (user === quiz.userId && !quiz.running) {
+        if (user === quiz.userId && !quiz.running && !quiz.paused) {
           startGame(app, context, say, quiz, channelName);
         } else {
-          say("Game not found!");
+          if (!quiz.running) {
+            say("Please start the game first!");
+          } else if (quiz.paused) {
+            say("Game is paused! Please resume the game.");
+          } else {
+            say("Game not Found!");
+          }
         }
         break;
 
@@ -227,9 +235,42 @@ app.command(
         let user = body.user_id;
 
         if (user === quiz.userId) {
-          stopGame(app, context, say, quiz, channelName);
+          stopGame(quiz);
         } else {
           say("Game not found!");
+        }
+        break;
+      }
+
+      case "resume": {
+        const channelName = body.channel_name;
+        let quiz = await QuizModel.findOne({ name: textArray[1] });
+        let user = body.user_id;
+        if (user === quiz.userId && quiz.running && quiz.paused) {
+          resumeGame(app, context, say, quiz, channelName);
+        } else {
+          if (!quiz.running) {
+            say("Please start the game first!");
+          } else if (!quiz.paused) {
+            say("Game is already running!");
+          } else {
+            say("Game not Found!");
+          }
+        }
+        break;
+      }
+      case "pause": {
+        const channelName = body.channel_name;
+        let quiz = await QuizModel.findOne({ name: textArray[1] });
+        let user = body.user_id;
+        if (user === quiz.userId && quiz.running) {
+          pauseGame(app, context, say, quiz, channelName);
+        } else {
+          if (!quiz.running) {
+            say("Please start the game first!");
+          } else {
+            say("Game not Found!");
+          }
         }
         break;
       }
@@ -240,8 +281,10 @@ app.command(
         let user = body.user_id;
 
         if (user === quiz.userId) {
-          stopGame(app, context, say, quiz, channelName);
-          startGame(app, context, say, quiz, channelName);
+          stopGame(quiz);
+          setTimeout(() => {
+            startGame(app, context, say, quiz, channelName);
+          }, 1000);
         } else {
           say("Game not found!");
         }
