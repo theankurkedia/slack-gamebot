@@ -89,6 +89,9 @@ The winner${winners.length > 1 ? "s" : ""} of ${quiz1.name} ${winners.length > 1
         });
         app.message(/^.*/, async ({ message, say }) => {
             var _a;
+            if (!expectedAnswer) {
+                return;
+            }
             const answerMatched = stringSimilarity.compareTwoStrings((_a = message.text) === null || _a === void 0 ? void 0 : _a.toLowerCase(), expectedAnswer === null || expectedAnswer === void 0 ? void 0 : expectedAnswer.toLowerCase());
             // console.log(
             //   "hello here ",
@@ -132,9 +135,9 @@ async function startGame(app, context, say, quiz1, channelName) {
     quiz1.running = true;
     quiz1.paused = false;
     quiz1.currentQuestionIndex = 0;
-    await quiz1.save();
     const scoreboard = new Scoreboard_1.ScoreboardModel();
     quiz1.scoreboard = scoreboard;
+    await quiz1.save();
     playGame(app, context, say, quiz1, channelName);
 }
 exports.startGame = startGame;
