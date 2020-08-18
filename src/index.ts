@@ -18,6 +18,7 @@ import {
   showGameEditModal,
   openQuestionEditView,
   getModalView,
+  addQuestionsModal,
 } from "./views";
 const DEFAULT_QUESTIONS_COUNT = 5;
 import mongoose from "mongoose";
@@ -179,27 +180,27 @@ async function runCommand(
   let out;
 
   switch (textArray[0]) {
-    case "create":
-      let gameName = textArray[1];
+    case "create": {
+      const gameName = textArray[1];
       if (gameName) {
         let questionNos = textArray[2];
         let data = await QuizModel.findOne({ name: gameName });
         if (!data) {
-          // setExistingQuestionCount(questionNos DEFAULT_QUESTIONS_COUNT);
           await showGameCreateModal(
             app,
             body,
             context,
             textArray[1],
-            questionNos ? Number(questionNos) : DEFAULT_QUESTIONS_COUNT
+            questionNos ? Number(questionNos) : 5
           );
         } else {
           out = ":warning: Game already exists :warning:";
         }
       } else {
-        out = "Please enter name for the game";
+        out = ":warning: Game already exists :warning:";
       }
       break;
+    }
 
     case "edit":
       if (textArray[1]) {
@@ -208,12 +209,33 @@ async function runCommand(
         if (data && user === data.userId) {
           await showGameEditModal(app, body, context, textArray[1], data);
         } else {
-          out = "Game does not exist";
+          out = ":warning: Game does not exist :warning:";
         }
       } else {
-        out = "Please enter game id";
+        out = "Game does not exist";
       }
       break;
+    case "addQuestions": {
+      const gameName = textArray[1];
+      if (gameName) {
+        let questionNos = textArray[2];
+        let data = await QuizModel.findOne({ name: gameName });
+        if (data) {
+          await addQuestionsModal(
+            app,
+            body,
+            context,
+            textArray[1],
+            questionNos ? Number(questionNos) : 1
+          );
+        } else {
+          out = ":warning: Game does not exist :warning:";
+        }
+      } else {
+        out = "Please enter name for the game";
+      }
+      break;
+    }
     case "start":
       const channelName = body.channel_name;
       let quiz = await QuizModel.findOne({ name: textArray[1] });
@@ -409,7 +431,6 @@ app.action(
     }
   }
 );
-
 app.action(
   "delete_question",
   async ({ context, ack, action, view, body, say }: any) => {
@@ -429,7 +450,11 @@ app.action(
         context,
         name,
         quiz.questions.length,
-        get(body, "view.callback_id") === "modal_create_callback_id",
+        get(body, "view.callback_id") === "modal_create_callback_id"
+          ? "new"
+          : get(body, "view.callback_id") === "modal_edit_callback_id"
+          ? "edit"
+          : "addQuestions",
         quiz
       );
     }
@@ -455,7 +480,6 @@ app.action(
     // }
   }
 );
-
 // app.view(
 //   "question_edit_callback_id",
 //   async ({ ack, context, view, body }: any) => {
@@ -562,6 +586,42 @@ app.view(
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
         messageObj.text = `Quiz created successfully.`;
+        messageObj.attachments = [getButtonAttachment(quiz)];
+      }
+      // Message the user
+      try {
+        await app.client.chat.postMessage(messageObj);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+  }
+);
+app.view(
+  "modal_add_questions_callback_id",
+  async ({ ack, context, view, body }: any) => {
+    await ack();
+    const user = body["user"]["id"];
+    let quizName = getGameNameFromView(view);
+    let quizFormData = getQuizFormData(view);
+    let quiz = await QuizModel.findOne({ name: quizName });
+    let existingQuestionLength = quiz.questions.length;
+    if (quizFormData.questions) {
+      quizFormData.questions.forEach((questionObj: any, index: number) => {
+        quiz.addQuestion(questionObj, existingQuestionLength + index + 1);
+      });
+    }
+
+    let messageObj: any = {
+      token: context.botToken,
+      channel: user,
+      text: "",
+    };
+    quiz.save(async function(err: any) {
+      if (err) {
+        messageObj.text = `There was an error with your submission \n \`${err.message}\``;
+      } else {
+        messageObj.text = `Question added successfully.`;
         messageObj.attachments = [getButtonAttachment(quiz)];
       }
       // Message the user
