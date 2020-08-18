@@ -17,6 +17,7 @@ const QuizSchema = new Schema({
   userId: { type: String, unique: true, require: true },
   config: { type: Config, default: { timePerQuestion: 10 } },
   running: { type: Boolean, default: false },
+  currentQuestionIndex: { type: Number, default: 0 },
   channel: { type: String, defautl: "" },
   questions: [QuestionSchema],
   scoreboard: ScoreboardSchema,
@@ -24,11 +25,11 @@ const QuizSchema = new Schema({
 });
 
 QuizSchema.methods = {
-  test: function () {
+  test: function() {
     return "test";
   },
 
-  addQuestion: function (question: typeof QuestionModel, index?: number) {
+  addQuestion: function(question: typeof QuestionModel, index?: number) {
     if (!isNil(index)) {
       // replacing the question
       this.questions.splice(index, 1, question);
@@ -36,7 +37,10 @@ QuizSchema.methods = {
       this.questions.push(question);
     }
   },
-  addAllQuestions: function (questions: any) {
+  deleteQuestion: function(index: number) {
+    this.questions.splice(index, 1);
+  },
+  addAllQuestions: function(questions: any) {
     this.questions = [];
     forEach(questions, (quesData) => {
       const questionObj = new QuestionModel();
@@ -46,7 +50,7 @@ QuizSchema.methods = {
     });
   },
 
-  updateUserScore: function (userId: any, score: number) {
+  updateUserScore: function(userId: any, score: number) {
     const scoreData = {
       userId: userId,
       score: score,
@@ -55,7 +59,7 @@ QuizSchema.methods = {
       this.scoreboard = new ScoreboardModel();
     }
     this.scoreboard.scores.push(scoreData);
-    // console.log(this.scoreboard, "hello here");
+    console.log(this.scoreboard, "hello here");
 
     this.save();
   },
@@ -66,9 +70,11 @@ QuizSchema.methods = {
  */
 
 QuizSchema.statics = {
-  load: function (options: any, cb: any) {
+  load: function(options: any, cb: any) {
     options.select = options.select || "name username";
-    return this.findOne(options.criteria).select(options.select).exec(cb);
+    return this.findOne(options.criteria)
+      .select(options.select)
+      .exec(cb);
   },
 };
 

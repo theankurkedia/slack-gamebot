@@ -1,3 +1,29 @@
+function run(quiz: any, callbacks: any) {
+  const timePerQuestion = quiz.config.timePerQuestion * 1000; // in milliseconds
+
+  const index = quiz.currentQuestionIndex;
+  const question = quiz.questions[index];
+
+  if (question) {
+    quiz.currentQuestionIndex = index + 1;
+    quiz.save();
+    callbacks.postQuestion(question, index);
+    console.log(
+      "asking question after ",
+      timePerQuestion * index + 5000 * index,
+      " seconds "
+    );
+
+    setTimeout(() => {
+      callbacks.postScoreboard(question, index);
+      console.log("posting score after ", timePerQuestion);
+      setTimeout(() => {
+        //
+        run(quiz, callbacks);
+      }, 5000);
+    }, timePerQuestion);
+  }
+}
 export default function quizRunner(
   quiz: any,
   callbacks: {
@@ -5,24 +31,5 @@ export default function quizRunner(
     postScoreboard: (question: any, index: number) => void;
   }
 ) {
-  const timePerQuestion = quiz.config.timePerQuestion * 1000; // in milliseconds
-
-  quiz.questions.forEach((question: any, index: number) => {
-    setTimeout(() => {
-      callbacks.postQuestion(question, index);
-      console.log(
-        "asking question after ",
-        timePerQuestion * index + 5000 * index,
-        " seconds "
-      );
-    }, timePerQuestion * index + 5000 * index);
-
-    setTimeout(() => {
-      callbacks.postScoreboard(question, index);
-      console.log(
-        "posting score after ",
-        timePerQuestion * index + 5000 * index + timePerQuestion
-      );
-    }, timePerQuestion * index + 5000 * index + timePerQuestion);
-  });
+  run(quiz, callbacks);
 }

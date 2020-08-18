@@ -204,7 +204,7 @@ export function getModalView(
   viewId?: string,
   data?: any
 ) {
-  console.log("*** 🔥 data", data);
+  // console.log("*** 🔥 data", data);
   const questionElements = getStaticQuestionAnswerElements(questionNos, data);
   return {
     token: context.botToken,
@@ -356,6 +356,19 @@ export async function updateQuestionModal(
   newQuiz: boolean,
   data: any
 ) {
+  // console.log(
+  //   app.client.views,
+  //   "&&&&&&",
+  //   getModalView(
+  //     body,
+  //     context,
+  //     gameName,
+  //     questionNos,
+  //     newQuiz,
+  //     body.view.id,
+  //     data
+  //   )
+  // );
   try {
     await app.client.views.update(
       getModalView(
