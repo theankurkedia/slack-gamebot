@@ -21,6 +21,7 @@ const QuizSchema = new Schema({
     default: { timePerQuestion: 10, answerMatchPercentage: 0.8 },
   },
   running: { type: Boolean, default: false },
+  paused: { type: Boolean, default: false },
   currentQuestionIndex: { type: Number, default: 0 },
   channel: { type: String, defautl: "" },
   questions: [QuestionSchema],

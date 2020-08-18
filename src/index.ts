@@ -9,13 +9,18 @@ import {
   showGameList,
   setExistingQuestionCount,
   stopGame,
+  resumeGame,
+  pauseGame,
 } from "./actions";
 import {
   showGameCreateModal,
-  showGameEditModal,
   updateQuestionModal,
+  showGameEditModal,
+  openQuestionEditView,
+  getModalView,
   addQuestionsModal,
 } from "./views";
+const DEFAULT_QUESTIONS_COUNT = 5;
 import mongoose from "mongoose";
 import { QuizModel } from "./models/Quiz";
 import {
@@ -99,9 +104,9 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <ques
 /${process.env.COMMAND_NAME} cancel <gameName> - cancel the creation of game
 /${process.env.COMMAND_NAME} help  - list out the commands
 /${process.env.COMMAND_NAME} list  - list of all games
-/${process.env.COMMAND_NAME} start <gameName> - start the game
-/${process.env.COMMAND_NAME} assign <gameName> <name> @<channel>
-/${process.env.COMMAND_NAME} result <gameName> <name> - find the result of person \`\`\``;
+/${process.env.COMMAND_NAME} start <id> - start the game
+/${process.env.COMMAND_NAME} assign <id> <name> @<channel>
+/${process.env.COMMAND_NAME} result <id> <name> - find the result of person \`\`\``;
 
 // app.message("t", async ({ say, context, body }) => {
 //   console.log("je;;p", body);
@@ -113,136 +118,192 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <ques
 //   await say(`User Details: ${user}`);
 // });
 
+async function runCommand(
+  textArray: any,
+  body: any,
+  context: any,
+  say: any,
+  command: any,
+  user: any
+) {
+  let out;
+
+  switch (textArray[0]) {
+    case "create": {
+      const gameName = textArray[1];
+      if (gameName) {
+        let questionNos = textArray[2];
+        let data = await QuizModel.findOne({ name: gameName });
+        if (!data) {
+          await showGameCreateModal(
+            app,
+            body,
+            context,
+            textArray[1],
+            questionNos ? Number(questionNos) : 5
+          );
+        } else {
+          out = ":warning: Game already exists :warning:";
+        }
+      } else {
+        out = ":warning: Game already exists :warning:";
+      }
+      break;
+    }
+
+    case "edit":
+      if (textArray[1]) {
+        let data = await QuizModel.findOne({ name: textArray[1] });
+        const user = body.user_id;
+        if (data && user === data.userId) {
+          await showGameEditModal(app, body, context, textArray[1], data);
+        } else {
+          out = ":warning: Game does not exist :warning:";
+        }
+      } else {
+        out = "Game does not exist";
+      }
+      break;
+    case "addQuestions": {
+      const gameName = textArray[1];
+      if (gameName) {
+        let questionNos = textArray[2];
+        let data = await QuizModel.findOne({ name: gameName });
+        if (data) {
+          await addQuestionsModal(
+            app,
+            body,
+            context,
+            textArray[1],
+            questionNos ? Number(questionNos) : 1
+          );
+        } else {
+          out = ":warning: Game does not exist :warning:";
+        }
+      } else {
+        out = "Please enter name for the game";
+      }
+      break;
+    }
+    case "start":
+      const channelName = body.channel_name;
+      let quiz = await QuizModel.findOne({ name: textArray[1] });
+
+      if (user === quiz.userId && !quiz.running && !quiz.paused) {
+        startGame(app, context, say, quiz, channelName);
+      } else {
+        if (!quiz.running) {
+          say("Please start the game first!");
+        } else if (quiz.paused) {
+          say("Game is paused! Please resume the game.");
+        } else {
+          say("Game not Found!");
+        }
+      }
+      break;
+
+    case "stop": {
+      const channelName = body.channel_name;
+      let quiz = await QuizModel.findOne({ name: textArray[1] });
+
+      console.log(user, textArray[1]);
+
+      if (user === quiz.userId) {
+        stopGame(quiz);
+        say("Game stopped succesfully!");
+      } else {
+        say("Game not found!");
+      }
+      break;
+    }
+
+    case "resume": {
+      const channelName = body.channel_name;
+      let quiz = await QuizModel.findOne({ name: textArray[1] });
+      if (user === quiz.userId && quiz.running && quiz.paused) {
+        resumeGame(app, context, say, quiz, channelName);
+        say("Game resumed!");
+      } else {
+        if (!quiz.running) {
+          say("Please start the game first!");
+        } else if (!quiz.paused) {
+          say("Game is already running!");
+        } else {
+          say("Game not Found!");
+        }
+      }
+      break;
+    }
+    case "pause": {
+      const channelName = body.channel_name;
+      let quiz = await QuizModel.findOne({ name: textArray[1] });
+      if (user === quiz.userId && quiz.running) {
+        pauseGame(app, context, say, quiz, channelName);
+        say("Game paused!");
+      } else {
+        if (!quiz.running) {
+          say("Please start the game first!");
+        } else {
+          say("Game not Found!");
+        }
+      }
+      break;
+    }
+
+    case "restart": {
+      const channelName = body.channel_name;
+      let quiz = await QuizModel.findOne({ name: textArray[1] });
+      let user = body.user_id;
+
+      if (user === quiz.userId) {
+        stopGame(quiz);
+        setTimeout(() => {
+          startGame(app, context, say, quiz, channelName);
+        }, 1000);
+      } else {
+        say("Game not found!");
+      }
+      break;
+    }
+    case "cancel":
+      if (textArray[1]) {
+        out = "Cancelling the game";
+        cancelGame(textArray[1]);
+      } else {
+        out = "Game does not exist";
+      }
+      break;
+
+    case "list":
+      let user1 = body.user_id;
+      await showGameList(app, say, user1, context);
+      // TODO: can show a modal for this
+      break;
+    case "help":
+      out = commandsList;
+      break;
+    case "scoreboard":
+      out = getScoreboard("game");
+      break;
+    case "score":
+      out = getUserScore(command.user_id);
+      break;
+    default:
+      out = `<@${command.user_id}> ${command.text}`;
+      break;
+  }
+  if (out) {
+    await say(`${out}`);
+  }
+}
 app.command(
   `/${process.env.COMMAND_NAME}`,
   async ({ ack, body, context, say, command }) => {
-    let out;
     await ack();
     let textArray = command.text.split(" ");
-    let gameName;
-    switch (textArray[0]) {
-      case "create":
-        gameName = textArray[1];
-        if (gameName) {
-          let questionNos = textArray[2];
-          let data = await QuizModel.findOne({ name: gameName });
-          if (!data) {
-            await showGameCreateModal(
-              app,
-              body,
-              context,
-              textArray[1],
-              questionNos ? Number(questionNos) : 5
-            );
-          } else {
-            out = ":warning: Game already exists :warning:";
-          }
-        } else {
-          out = "Please enter name for the game";
-        }
-        break;
+    let user = body.user_id;
 
-      case "edit":
-        if (textArray[1]) {
-          let data = await QuizModel.findOne({ name: textArray[1] });
-          const user = body.user_id;
-          if (data && user === data.userId) {
-            await showGameEditModal(app, body, context, textArray[1], data);
-          } else {
-            out = ":warning: Game does not exist :warning:";
-          }
-        } else {
-          out = "Please enter game id";
-        }
-        break;
-      case "addQuestions":
-        gameName = textArray[1];
-        if (gameName) {
-          let questionNos = textArray[2];
-          let data = await QuizModel.findOne({ name: gameName });
-          if (data) {
-            await addQuestionsModal(
-              app,
-              body,
-              context,
-              textArray[1],
-              questionNos ? Number(questionNos) : 1
-            );
-          } else {
-            out = ":warning: Game does not exist :warning:";
-          }
-        } else {
-          out = "Please enter name for the game";
-        }
-        break;
-      case "start":
-        const channelName = body.channel_name;
-        let quiz = await QuizModel.findOne({ name: textArray[1] });
-        let user = body.user_id;
-
-        if (user === quiz.userId && !quiz.running) {
-          startGame(app, context, say, quiz, channelName);
-        } else {
-          say("Game not found!");
-        }
-        break;
-
-      case "stop": {
-        const channelName = body.channel_name;
-        let quiz = await QuizModel.findOne({ name: textArray[1] });
-        let user = body.user_id;
-
-        if (user === quiz.userId) {
-          stopGame(app, context, say, quiz, channelName);
-        } else {
-          say("Game not found!");
-        }
-        break;
-      }
-
-      case "restart": {
-        const channelName = body.channel_name;
-        let quiz = await QuizModel.findOne({ name: textArray[1] });
-        let user = body.user_id;
-
-        if (user === quiz.userId) {
-          stopGame(app, context, say, quiz, channelName);
-          startGame(app, context, say, quiz, channelName);
-        } else {
-          say("Game not found!");
-        }
-        break;
-      }
-      case "cancel":
-        if (textArray[1]) {
-          out = "Cancelling the game";
-          cancelGame(textArray[1]);
-        } else {
-          out = "Game does not exist";
-        }
-        break;
-
-      case "list":
-        let user1 = body.user_id;
-        await showGameList(app, say, user1, context);
-        // TODO: can show a modal for this
-        break;
-      case "help":
-        out = commandsList;
-        break;
-      case "scoreboard":
-        out = getScoreboard("game");
-        break;
-      case "score":
-        out = getUserScore(command.user_id);
-        break;
-      default:
-        out = `<@${command.user_id}> ${command.text}`;
-        break;
-    }
-    if (out) {
-      await say(`${out}`);
-    }
+    runCommand(textArray, body, context, say, command, user);
   }
 );
 
@@ -283,19 +344,18 @@ app.command(
 
 app.action(
   { callback_id: "button_callback" },
-  async ({ context, ack, action, view, body, say }: any) => {
+  async ({ context, ack, action, view, body, say, command }: any) => {
     await ack();
+    const user = body["user"]["id"];
+
     if (action.name === "edit") {
       let data = await QuizModel.findOne({ name: action.value });
-      const user = body["user"]["id"];
       if (data && user === data.userId && !data.running) {
         await showGameEditModal(app, body, context, action.value, data);
       } else {
         say("Something went wrong!");
       }
     } else if (action.name === "delete") {
-      //
-      // console.log(action);
       let name = action.value;
       let data = await QuizModel.findOne({ name: action.value });
       const user = body["user"]["id"];
@@ -309,10 +369,26 @@ app.action(
       } else {
         say("Something went wrong!");
       }
+    } else if (action.name === "start") {
+      runCommand(["start", action.value], body, context, say, command, user);
+    } else if (action.name === "stop") {
+      runCommand(["stop", action.value], body, context, say, command, user);
+    } else if (action.name === "pause") {
+      runCommand(["pause", action.value], body, context, say, command, user);
+    } else if (action.name === "resume") {
+      runCommand(["resume", action.value], body, context, say, command, user);
+    } else if (action.name === "add_question") {
+      runCommand(
+        ["addQuestions", action.value],
+        body,
+        context,
+        say,
+        command,
+        user
+      );
     }
   }
 );
-
 app.action(
   "delete_question",
   async ({ context, ack, action, view, body, say }: any) => {
@@ -342,7 +418,6 @@ app.action(
     }
   }
 );
-
 app.view(
   "modal_create_callback_id",
   async ({ ack, context, view, body }: any) => {

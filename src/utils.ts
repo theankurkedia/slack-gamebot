@@ -57,12 +57,18 @@ export function getValueFromView(view: any, name: any) {
 }
 
 export const getButtonAttachment = (quiz: any): any => {
-  return {
+  let attachments: any = {
     text: quiz.name,
     fallback: "You are unable to choose a game",
     callback_id: "button_callback",
     color: "#3AA3E3",
     actions: [
+      {
+        name: "add_question",
+        text: "Add Question",
+        type: "button",
+        value: quiz.name,
+      },
       {
         name: "edit",
         text: "Edit",
@@ -84,4 +90,61 @@ export const getButtonAttachment = (quiz: any): any => {
       },
     ],
   };
+
+  if (quiz.running) {
+    attachments.actions.push({
+      name: "stop",
+      text: "Stop",
+      type: "button",
+      value: quiz.name,
+      confirm: {
+        title: "Are you sure?",
+        text: "",
+        ok_text: "Yes",
+        dismiss_text: "No",
+      },
+    });
+    if (quiz.paused) {
+      attachments.actions.push({
+        name: "resume",
+        text: "Resume",
+        type: "button",
+        value: quiz.name,
+        confirm: {
+          title: "Are you sure?",
+          text: "",
+          ok_text: "Yes",
+          dismiss_text: "No",
+        },
+      });
+    } else {
+      attachments.actions.push({
+        name: "pause",
+        text: "Pause",
+        type: "button",
+        value: quiz.name,
+        confirm: {
+          title: "Are you sure?",
+          text: "",
+          ok_text: "Yes",
+          dismiss_text: "No",
+        },
+      });
+    }
+  } else {
+    attachments.actions.push({
+      name: "start",
+      text: "Start",
+      type: "button",
+      value: quiz.name,
+      confirm: {
+        title: "Are you sure?",
+        text: "",
+        ok_text: "Yes",
+        dismiss_text: "No",
+      },
+    });
+  }
+
+  return attachments;
 };
