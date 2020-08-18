@@ -46,6 +46,19 @@ const app = new App({
   console.log("⚡️ Bolt app is running!");
 })();
 
+const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <questionNos = 5>       - create a new game
+/${process.env.COMMAND_NAME} edit <gameName>                           - edit existing game
+/${process.env.COMMAND_NAME} addQuestions <gameName> <questionNos = 1> - edit existing game
+/${process.env.COMMAND_NAME} start <gameName>                          - start the game
+/${process.env.COMMAND_NAME} stop <gameName>                           - stop the game
+/${process.env.COMMAND_NAME} pause <gameName>                          - pause the game
+/${process.env.COMMAND_NAME} resume <gameName>                         - resume the game
+/${process.env.COMMAND_NAME} restart <gameName>                        - restart the game
+/${process.env.COMMAND_NAME} cancel <gameName>                         - cancel the creation of game
+/${process.env.COMMAND_NAME} list                                      - list of all games
+/${process.env.COMMAND_NAME} help                                      - list out the commands
+/${process.env.COMMAND_NAME} myScore <gameName>                        - find the result of person \`\`\``;
+
 app.message("list", async ({ say, context, message }) => {
   console.log(
     stringSimilarity.compareTwoStrings("play station", "playstation")
@@ -87,16 +100,6 @@ app.message("list", async ({ say, context, message }) => {
   // });
 });
 
-const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <questionNos = 5> - create a new game
-/${process.env.COMMAND_NAME} edit <gameName> - edit existing game
-/${process.env.COMMAND_NAME} addQuestions <gameName> <questionNos = 1> - edit existing game
-/${process.env.COMMAND_NAME} cancel <gameName> - cancel the creation of game
-/${process.env.COMMAND_NAME} help  - list out the commands
-/${process.env.COMMAND_NAME} list  - list of all games
-/${process.env.COMMAND_NAME} start <gameName> - start the game
-/${process.env.COMMAND_NAME} assign <gameName> <name> @<channel>
-/${process.env.COMMAND_NAME} myScore <gameName> - find the result of person \`\`\``;
-
 async function runCommand(
   textArray: any,
   body: any,
@@ -129,7 +132,6 @@ async function runCommand(
       }
       break;
     }
-
     case "edit":
       if (textArray[1]) {
         let data = await QuizModel.findOne({ name: textArray[1] });
@@ -182,7 +184,6 @@ async function runCommand(
         out = ":warning: Game does not exist! :warning:";
       }
       break;
-
     case "stop": {
       let quiz = await QuizModel.findOne({ name: textArray[1] });
       if (quiz) {
@@ -197,7 +198,6 @@ async function runCommand(
       }
       break;
     }
-
     case "resume": {
       const channelName = body.channel_name;
       let quiz = await QuizModel.findOne({ name: textArray[1] });
@@ -238,7 +238,6 @@ async function runCommand(
       }
       break;
     }
-
     case "restart": {
       const channelName = body.channel_name;
       let quiz = await QuizModel.findOne({ name: textArray[1] });
@@ -265,7 +264,6 @@ async function runCommand(
         out = ":warning: Game does not exist! :warning:";
       }
       break;
-
     case "list":
       let user1 = body.user_id;
       await showGameList(app, say, user1, context);
