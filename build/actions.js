@@ -161,27 +161,25 @@ async function getScoreboard(quiz) {
     }
 }
 exports.getScoreboard = getScoreboard;
-async function showGameList(app, say, userId, context) {
-    const user = userId;
-    const quizzes = await Quiz_1.QuizModel.find({ userId: user });
-    if (quizzes.length) {
-        let message = {
-            token: context.botToken,
-            channel: userId,
-            user: userId,
-            text: "List of games.",
-            attachments: [],
-        };
-        lodash_1.forEach(quizzes, (quiz) => {
+async function showGameList(app, say, userId, context, body) {
+    let message = {
+        token: context.botToken,
+        channel: body.channel_name,
+        user: userId,
+        text: "List of games.",
+        attachments: [],
+    };
+    const quizes = await Quiz_1.QuizModel.find({ userId });
+    if (quizes && quizes.length) {
+        lodash_1.forEach(quizes, (quiz) => {
             const attachment = utils_1.getButtonAttachment(quiz);
             message.attachments.push(attachment);
         });
         await app.client.chat.postEphemeral(message);
-        // postEphemeral
-        // say(message);
     }
     else {
-        await app.client.chat.postEphemeral(`No quizzes found!`);
+        message.text = `No games found!`;
+        await app.client.chat.postEphemeral(message);
     }
 }
 exports.showGameList = showGameList;

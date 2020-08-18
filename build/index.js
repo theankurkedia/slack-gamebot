@@ -45,44 +45,6 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <ques
 /${process.env.COMMAND_NAME} list                                      - list of all games
 /${process.env.COMMAND_NAME} help                                      - list out the commands
 /${process.env.COMMAND_NAME} myScore <gameName>                        - find the result of person \`\`\``;
-app.message("list", async ({ say, context, message }) => {
-    console.log(stringSimilarity.compareTwoStrings("play station", "playstation"));
-    // const user = message.user;
-    // await say({
-    //   token: context.botToken,
-    //   channel: user,
-    //   text: "Would you like to play a game?",
-    //   attachments: [
-    //     {
-    //       text: "Choose a game to play",
-    //       fallback: "You are unable to choose a game",
-    //       callback_id: "button_callback",
-    //       color: "#3AA3E3",
-    //       actions: [
-    //         {
-    //           name: "edit",
-    //           text: "Edit Game",
-    //           type: "button",
-    //           value: "maze",
-    //         },
-    //         {
-    //           name: "game",
-    //           text: "Delete Game",
-    //           style: "danger",
-    //           type: "button",
-    //           value: "war",
-    //           confirm: {
-    //             title: "Are you sure?",
-    //             text: "",
-    //             ok_text: "Yes",
-    //             dismiss_text: "No",
-    //           },
-    //         },
-    //       ],
-    //     },
-    //   ],
-    // });
-});
 async function runCommand(textArray, body, context, say, command, user) {
     let out;
     switch (textArray[0]) {
@@ -275,8 +237,7 @@ async function runCommand(textArray, body, context, say, command, user) {
             }
             break;
         case "list":
-            let user1 = body.user_id;
-            await actions_1.showGameList(app, say, user1, context);
+            await actions_1.showGameList(app, say, user, context, body);
             // TODO: can show a modal for this
             break;
         case "help":
@@ -317,7 +278,7 @@ async function runCommand(textArray, body, context, say, command, user) {
     if (out) {
         let message = {
             token: context.botToken,
-            channel: user,
+            channel: body.channel_name,
             user: user,
             text: out,
             attachments: [],
@@ -499,7 +460,7 @@ app.view("modal_edit_callback_id", async ({ action, ack, context, view, body, sa
     let msg = "";
     let quizName = utils_1.getGameNameFromView(view);
     let quizFormData = getQuizFormData_1.getQuizFormData(view);
-    console.log(quizFormData, "hello here");
+    console.log(action, view, body, "hello here");
     let quiz = await Quiz_1.QuizModel.findOne({ name: quizName });
     let messageObj = {
         token: context.botToken,
