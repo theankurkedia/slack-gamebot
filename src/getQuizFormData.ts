@@ -1,4 +1,4 @@
-import { getValueFromFormInput } from "./utils";
+import { getValueFromFormInput, getSelectedOptionFromFormInput } from "./utils";
 import { forEach } from "lodash";
 import { QuizModel } from "./models/Quiz";
 import { QuestionModel } from "./models/Question";
@@ -30,7 +30,16 @@ export const getQuizFormData = (view: any) => {
         quizObject.config = { timePerQuestion: value };
       }
     } else if (key === "answerMatchPercentage") {
-      console.log("*** 🔥 key", entry);
+      const selectedOption = getSelectedOptionFromFormInput(entry[1]);
+      // console.log("*** 🔥 key", selectedOption, entry[1]);
+
+      if (quizObject.config) {
+        quizObject.config.answerMatchPercentage = parseFloat(selectedOption);
+      } else {
+        quizObject.config = {
+          answerMatchPercentage: parseFloat(selectedOption),
+        };
+      }
     }
   });
 

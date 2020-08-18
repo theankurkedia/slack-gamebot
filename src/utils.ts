@@ -2,6 +2,12 @@ export const getValueFromFormInput = (obj: any) => {
   const inputObj = obj[Object.keys(obj)[0]];
   return inputObj.value;
 };
+
+export const getSelectedOptionFromFormInput = (obj: any) => {
+  const inputObj = obj[Object.keys(obj)[0]];
+
+  return inputObj.selected_option.value;
+};
 export function getGameNameFromView(view: any) {
   let quizName = view["title"]["text"];
   quizName = quizName ? quizName.split(" ") : [];

@@ -361,7 +361,7 @@ app.action(
       const user = body["user"]["id"];
 
       if (data && user === data.userId && !data.running) {
-        QuizModel.deleteOne({ name }, function (err: any) {
+        QuizModel.deleteOne({ name }, function(err: any) {
           if (err) return say("Something went wrong!");
           // deleted at most one tank document
           say(`Quiz \`${name}\` deleted successfully.`);
@@ -429,14 +429,14 @@ app.view(
     let quiz = new QuizModel();
     quiz.name = quizName;
     quiz.userId = user;
-    // quiz.addAllQuestions(quizFormData.questions);
-
+    quiz.addAllQuestions(quizFormData.questions);
+    quiz.config = quizFormData.config;
     let messageObj: any = {
       token: context.botToken,
       channel: user,
       text: "",
     };
-    quiz.save(async function (err: any) {
+    quiz.save(async function(err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -472,7 +472,7 @@ app.view(
       channel: user,
       text: "",
     };
-    quiz.save(async function (err: any) {
+    quiz.save(async function(err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -497,6 +497,8 @@ app.view(
     let msg = "";
     let quizName = getGameNameFromView(view);
     let quizFormData = getQuizFormData(view);
+
+    console.log(quizFormData, "hello here");
     let quiz = await QuizModel.findOne({ name: quizName });
 
     let messageObj: any = {
@@ -517,7 +519,8 @@ app.view(
       }
     } else {
       quiz.addAllQuestions(quizFormData.questions);
-      quiz.save(async function (err: any) {
+      quiz.config = quizFormData.config;
+      quiz.save(async function(err: any) {
         if (err) {
           messageObj.text = `There was an error with your submission \n \`${err.message}\``;
         } else {
