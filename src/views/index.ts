@@ -1,67 +1,5 @@
 import { get, capitalize } from "lodash";
 
-function getStaticQuestionAnswerElements(number: number, data?: any) {
-  let elements: any = [];
-  for (let i = 0; i < number; i++) {
-    let questionData = get(data, `questions[${i}]`);
-    elements = elements.concat([
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `*Question ${i + 1}*`,
-        },
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: questionData ? questionData.question : `Question ${i + 1}`,
-        },
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `*Answer*: ${
-            questionData ? questionData.answer : `answer ${i + 1}`
-          }`,
-        },
-      },
-      {
-        type: "actions",
-        elements: [
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Edit",
-              emoji: true,
-            },
-            value: `${i + 1}`,
-            action_id: "edit_question",
-          },
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Delete",
-              emoji: true,
-            },
-            value: `${i}`,
-            action_id: "delete_question",
-          },
-        ],
-      },
-    ]);
-    if (i !== number - 1) {
-      elements.push({
-        type: "divider",
-      });
-    }
-  }
-  return elements;
-}
 function getQuestionAnswerElements(number: number, data?: any) {
   let elements: any = [];
   for (let i = 0; i < number; i++) {
@@ -100,16 +38,6 @@ function getQuestionAnswerElements(number: number, data?: any) {
             type: "button",
             text: {
               type: "plain_text",
-              text: "Save",
-              emoji: true,
-            },
-            value: `save_question_${i + 1}`,
-            action_id: "save_question",
-          },
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
               text: "Delete",
               emoji: true,
             },
@@ -118,12 +46,10 @@ function getQuestionAnswerElements(number: number, data?: any) {
           },
         ],
       },
-    ]);
-    if (i !== number - 1) {
-      elements.push({
+      {
         type: "divider",
-      });
-    }
+      },
+    ]);
   }
   return elements;
 }
@@ -204,8 +130,7 @@ export function getModalView(
   viewId?: string,
   data?: any
 ) {
-  // console.log("*** 🔥 data", data);
-  const questionElements = getStaticQuestionAnswerElements(questionNos, data);
+  const questionElements = getQuestionAnswerElements(questionNos, data);
   return {
     token: context.botToken,
     view_id: viewId,
@@ -238,69 +163,95 @@ export function getModalView(
           elements: [
             {
               type: "plain_text",
-              text: "Add Questions",
+              text: `${data ? `Add ` : `Edit `} Questions`,
               emoji: true,
             },
           ],
         },
-        // {
-        //   type: "section",
-        //   accessory: {
-        //     type: "static_select",
-        //     placeholder: {
-        //       type: "plain_text",
-        //       text: "Select question item",
-        //       emoji: true,
-        //     },
-        //     options: [
-        //       {
-        //         text: {
-        //           type: "plain_text",
-        //           text: "MCQ",
-        //           emoji: true,
-        //         },
-        //         value: "answer-type-mcq",
-        //       },
-        //       {
-        //         text: {
-        //           type: "plain_text",
-        //           text: "Input",
-        //           emoji: true,
-        //         },
-        //         value: "answer-type-input",
-        //       },
-        //       {
-        //         text: {
-        //           type: "plain_text",
-        //           text: "Chat",
-        //           emoji: true,
-        //         },
-        //         value: "answer-type-chat",
-        //       },
-        //     ],
-        //   },
-        //   text: {
-        //     type: "mrkdwn",
-        //     text: " ",
-        //   },
-        // },
         ...questionElements,
-
         {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: " ",
-          },
-          accessory: {
-            type: "button",
-            action_id: "add_question",
-            text: {
+          type: "context",
+          elements: [
+            {
               type: "plain_text",
-              text: "Add question",
+              text: "Set Config",
               emoji: true,
             },
-            value: "add_question_button",
+          ],
+        },
+        {
+          type: "input",
+          block_id: "answerMatchPercentage",
+          initial_option:
+            data && get(data, "data.config.answerMatchPercentage")
+              ? data.config.answerMatchPercentage == "0.8"
+                ? {
+                    text: {
+                      type: "plain_text",
+                      text: "Partial match",
+                      emoji: true,
+                    },
+                    value: "0.8",
+                  }
+                : {
+                    text: {
+                      type: "plain_text",
+                      text: "Exact match",
+                      emoji: true,
+                    },
+                    value: "1",
+                  }
+              : undefined,
+          element: {
+            type: "static_select",
+            placeholder: {
+              type: "plain_text",
+              text: "Select accuracy",
+              emoji: true,
+            },
+            options: [
+              {
+                text: {
+                  type: "plain_text",
+                  text: "Partial match",
+                  emoji: true,
+                },
+                value: "0.8",
+              },
+              {
+                text: {
+                  type: "plain_text",
+                  text: "Exact match",
+                  emoji: true,
+                },
+                value: "1",
+              },
+            ],
+          },
+          label: {
+            type: "plain_text",
+            text: "Answer accuracy",
+            emoji: true,
+          },
+        },
+        {
+          type: "input",
+          block_id: "timePerQuestion",
+          element: {
+            type: "plain_text_input",
+            initial_value:
+              data && get(data, "config.timePerQuestion")
+                ? get(data, "config.timePerQuestion").toString()
+                : undefined,
+            placeholder: {
+              type: "plain_text",
+              text: "Enter the time in seconds",
+            },
+          },
+          label: {
+            type: "plain_text",
+            text: "Time per question",
+            emoji: true,
           },
         },
       ],

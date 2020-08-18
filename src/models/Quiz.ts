@@ -7,6 +7,7 @@ const Schema = mongoose.Schema;
 
 const Config = new Schema({
   timePerQuestion: { type: Number, default: 10 },
+  answerMatchPercentage: { type: Number, default: 0.8 },
 });
 /**
  * User Schema
@@ -15,13 +16,15 @@ const Config = new Schema({
 const QuizSchema = new Schema({
   name: { type: String, unique: true, required: true },
   userId: { type: String, unique: true, require: true },
-  config: { type: Config, default: { timePerQuestion: 10 } },
+  config: {
+    type: Config,
+    default: { timePerQuestion: 10, answerMatchPercentage: 0.8 },
+  },
   running: { type: Boolean, default: false },
   currentQuestionIndex: { type: Number, default: 0 },
   channel: { type: String, defautl: "" },
   questions: [QuestionSchema],
   scoreboard: ScoreboardSchema,
-  answerMatchPercentage: { type: Number, default: 0.8 },
 });
 
 QuizSchema.methods = {

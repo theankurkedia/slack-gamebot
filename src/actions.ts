@@ -111,26 +111,31 @@ ${
 `,
         });
         if (index === quiz1.questions.length - 1) {
-          const winner = scoreboard.getWinner();
+          const winners = scoreboard.getWinners();
           await app.client.chat.postMessage({
             // The token you used to initialize your app is stored in the `context` object
             token: context.botToken,
             channel: `#${channelName}`,
             text: `
-The winner of ${quiz1.name} is :drum_with_drumsticks: :drum_with_drumsticks: :drum_with_drumsticks:
-
-
-
-            `,
+The winner${winners.length > 1 ? "s" : ""} of ${quiz1.name} ${
+              winners.length > 1 ? "are" : "is"
+            } :drum_with_drumsticks: :drum_with_drumsticks: :drum_with_drumsticks:
+          `,
           });
+
           setTimeout(async () => {
+            let winnersString = "";
+            winners.forEach((winner: string) => {
+              winnersString += `<@${winner}> `;
+            });
             await app.client.chat.postMessage({
               // The token you used to initialize your app is stored in the `context` object
               token: context.botToken,
               channel: `#${channelName}`,
-              text: `<@${winner}> :tada::tada::tada:`,
+              text: winnersString
+                ? `${winnersString} :tada::tada::tada:`
+                : `No one :cry:`,
             });
-
             quiz1.running = false;
             quiz1.save();
           }, 3000);

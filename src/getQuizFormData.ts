@@ -15,7 +15,6 @@ export const getQuizFormData = (view: any) => {
     let value = getValueFromFormInput(entry[1]);
 
     if (key === "quiz_name") {
-      // quiz.name = value;
       quizObject.name = value;
     } else if (key.startsWith("question_")) {
       quizObject.questions.push({
@@ -24,6 +23,14 @@ export const getQuizFormData = (view: any) => {
           dataInput[`answer_${key.split(`question_`)[1]}`]
         ),
       });
+    } else if (key === "timePerQuestion") {
+      if (quizObject.config) {
+        quizObject.config.timePerQuestion = value;
+      } else {
+        quizObject.config = { timePerQuestion: value };
+      }
+    } else if (key === "answerMatchPercentage") {
+      console.log("*** 🔥 key", entry);
     }
   });
 
