@@ -8,6 +8,7 @@ import {
   getNextQuestionNumber,
   showGameList,
   setExistingQuestionCount,
+  stopGame,
 } from "./actions";
 import {
   showGameCreateModal,
@@ -230,14 +231,42 @@ app.command(
         break;
       case "start":
         const channelName = body.channel_name;
-        let data = await QuizModel.findOne({ name: textArray[1] });
+        let quiz = await QuizModel.findOne({ name: textArray[1] });
         let user = body.user_id;
-        if (data && user === data.userId) {
-          startGame(app, context, say, textArray[1], channelName);
+
+        if (user === quiz.userId && !quiz.running) {
+          startGame(app, context, say, quiz, channelName);
         } else {
           say("Game not found!");
         }
         break;
+
+      case "stop": {
+        const channelName = body.channel_name;
+        let quiz = await QuizModel.findOne({ name: textArray[1] });
+        let user = body.user_id;
+
+        if (user === quiz.userId) {
+          stopGame(app, context, say, quiz, channelName);
+        } else {
+          say("Game not found!");
+        }
+        break;
+      }
+
+      case "restart": {
+        const channelName = body.channel_name;
+        let quiz = await QuizModel.findOne({ name: textArray[1] });
+        let user = body.user_id;
+
+        if (user === quiz.userId) {
+          stopGame(app, context, say, quiz, channelName);
+          startGame(app, context, say, quiz, channelName);
+        } else {
+          say("Game not found!");
+        }
+        break;
+      }
       case "cancel":
         if (textArray[1]) {
           out = "Cancelling the game";
@@ -313,7 +342,7 @@ app.action(
     if (action.name === "edit") {
       let data = await QuizModel.findOne({ name: action.value });
       const user = body["user"]["id"];
-      if (data && user === data.userId) {
+      if (data && user === data.userId && !data.running) {
         await showGameEditModal(app, body, context, action.value, data);
       } else {
         say("Something went wrong!");
@@ -325,11 +354,15 @@ app.action(
       let data = await QuizModel.findOne({ name: action.value });
       const user = body["user"]["id"];
 
-      QuizModel.deleteOne({ name }, function (err: any) {
-        if (err) return say("Something went wrong!");
-        // deleted at most one tank document
-        say(`Quiz \`${name}\` deleted successfully.`);
-      });
+      if (data && user === data.userId && !data.running) {
+        QuizModel.deleteOne({ name }, function(err: any) {
+          if (err) return say("Something went wrong!");
+          // deleted at most one tank document
+          say(`Quiz \`${name}\` deleted successfully.`);
+        });
+      } else {
+        say("Something went wrong!");
+      }
     }
   }
 );
@@ -346,6 +379,16 @@ app.action(
     if (quiz && user === quiz.userId) {
       quiz.deleteQuestion(parseInt(action.value, 10));
       quiz.save();
+
+      await updateQuestionModal(
+        app,
+        body,
+        context,
+        name,
+        quiz.questions.length,
+        get(body, "view.callback_id") === "modal_create_callback_id",
+        quiz
+      );
     }
 
     // if (action.name === "edit") {
@@ -464,14 +507,14 @@ app.view(
     let quiz = new QuizModel();
     quiz.name = quizName;
     quiz.userId = user;
-    quiz.addAllQuestions(quizFormData.questions);
+    // quiz.addAllQuestions(quizFormData.questions);
 
     let messageObj: any = {
       token: context.botToken,
       channel: user,
       text: "",
     };
-    quiz.save(async function (err: any) {
+    quiz.save(async function(err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -553,9 +596,9 @@ app.view(
         console.error(error);
       }
     } else {
-      quiz.addAllQuestions(quizFormData.questions);
+      // quiz.addAllQuestions(quizFormData.questions);
 
-      quiz.save(async function (err: any) {
+      quiz.save(async function(err: any) {
         if (err) {
           messageObj.text = `There was an error with your submission \n \`${err.message}\``;
         } else {

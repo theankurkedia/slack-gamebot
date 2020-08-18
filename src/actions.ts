@@ -16,21 +16,32 @@ export function setExistingQuestionCount(count: number) {
 export function setGameType(type: string) {
   // sets the game type
 }
+
+export async function stopGame(
+  app: App,
+  context: Context,
+  say: SayFn,
+  quiz1: any,
+  channelName: string
+) {
+  //
+  quiz1.running = false;
+  quiz1.save();
+}
 export async function startGame(
   app: App,
   context: Context,
   say: SayFn,
-  name: string,
+  quiz1: any,
   channelName: string
 ) {
   say(
     "Hello everyone!\nLet's start the game.\nThe first question is coming up in 5 seconds."
   );
 
-  let quiz1 = await QuizModel.findOne({ name });
-  // if (!quiz1) {
-  //   //
-  // }
+  quiz1.running = true;
+  quiz1.currentQuestionIndex = 0;
+  quiz1.save();
   console.log(quiz1.config, "hello quiz");
 
   // quiz1 = {
@@ -50,7 +61,9 @@ export async function startGame(
           // The token you used to initialize your app is stored in the `context` object
           token: context.botToken,
           channel: `#${channelName}`,
-          text: `\`${question.question}\``,
+          text: `\`Question (${index + 1}/${quiz1.questions.length}):\` ${
+            question.question
+          }`,
           // blocks: [
           //   {
           //     type: "section",
@@ -69,22 +82,21 @@ export async function startGame(
           //   },
           // ],
         });
-
         expectedAnswer = question.answer;
       },
       postScoreboard: async (question: any, index: number) => {
         const formattedScoreboard = scoreboard.getFormattedScoreboard();
 
-        console.log(formattedScoreboard, scoreboard, "format");
-        if (formattedScoreboard) {
-          const pointsMessage = userAwardedPointForThisRound
-            ? `<@${userAwardedPointForThisRound}> gets this one. `
-            : `Oops! Looks like no one got this one. `;
-          await app.client.chat.postMessage({
-            // The token you used to initialize your app is stored in the `context` object
-            token: context.botToken,
-            channel: `#${channelName}`,
-            text: `Time up :clock1:
+        console.log(formattedScoreboard, "format");
+        // if (formattedScoreboard) {
+        const pointsMessage = userAwardedPointForThisRound
+          ? `<@${userAwardedPointForThisRound}> gets this one. `
+          : `Oops! Looks like no one got this one. `;
+        await app.client.chat.postMessage({
+          // The token you used to initialize your app is stored in the `context` object
+          token: context.botToken,
+          channel: `#${channelName}`,
+          text: `Time up :clock1:
 
 ${pointsMessage}
 The correct answer was \`${question.answer}\`.
@@ -94,39 +106,41 @@ ${
     ? "This is the final scoreboard!"
     : "Here's the scoreboard:"
 }
-\`\`\`${formattedScoreboard}\`\`\`
+\`\`\`${formattedScoreboard ? formattedScoreboard : "---------"}\`\`\`
 
 `,
+        });
+        if (index === quiz1.questions.length - 1) {
+          const winners = scoreboard.getWinners();
+          await app.client.chat.postMessage({
+            // The token you used to initialize your app is stored in the `context` object
+            token: context.botToken,
+            channel: `#${channelName}`,
+            text: `
+The winner${winners.length > 1 ? "s" : ""} of ${quiz1.name} ${
+              winners.length > 1 ? "are" : "is"
+            } :drum_with_drumsticks: :drum_with_drumsticks: :drum_with_drumsticks:
+          `,
           });
-          if (index === quiz1.questions.length - 1) {
-            const winners = scoreboard.getWinners();
+
+          setTimeout(async () => {
+            let winnersString = "";
+            winners.forEach((winner: string) => {
+              winnersString += `<@${winner}> `;
+            });
             await app.client.chat.postMessage({
               // The token you used to initialize your app is stored in the `context` object
               token: context.botToken,
               channel: `#${channelName}`,
-              text: `
-The winner${winners.length > 1 ? "s" : ""} of ${quiz1.name} ${
-                winners.length > 1 ? "are" : "is"
-              } :drum_with_drumsticks: :drum_with_drumsticks: :drum_with_drumsticks:
-
-
-
-            `,
+              text: winnersString
+                ? `${winnersString} :tada::tada::tada:`
+                : `No one :cry:`,
             });
-            setTimeout(async () => {
-              let winnersString = "";
-              winners.forEach((winner: string) => {
-                winnersString += `<@${winner}> `;
-              });
-              await app.client.chat.postMessage({
-                // The token you used to initialize your app is stored in the `context` object
-                token: context.botToken,
-                channel: `#${channelName}`,
-                text: `${winnersString} :tada::tada::tada:`,
-              });
-            }, 3000);
-          }
+            quiz1.running = false;
+            quiz1.save();
+          }, 3000);
         }
+        // }
 
         expectedAnswer = null;
         userAwardedPointForThisRound = "";

@@ -321,6 +321,19 @@ export async function addQuestionsModal(
   name: string,
   questionNos: number
 ) {
+  // console.log(
+  //   app.client.views,
+  //   "&&&&&&",
+  //   getModalView(
+  //     body,
+  //     context,
+  //     gameName,
+  //     questionNos,
+  //     newQuiz,
+  //     body.view.id,
+  //     data
+  //   )
+  // );
   try {
     await app.client.views.open(
       getModalView(body, context, name, questionNos, "addQuestions")
