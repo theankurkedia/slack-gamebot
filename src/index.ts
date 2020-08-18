@@ -154,7 +154,6 @@ async function runCommand(
     case "edit":
       if (textArray[1]) {
         let data = await QuizModel.findOne({ name: textArray[1] });
-        const user = body.user_id;
         if (data && user === data.userId) {
           await showGameEditModal(app, body, context, textArray[1], data);
         } else {
@@ -193,11 +192,11 @@ async function runCommand(
         startGame(app, context, say, quiz, channelName);
       } else {
         if (!quiz.running) {
-          say("Please start the game first!");
+          out = "Please start the game first!";
         } else if (quiz.paused) {
-          say("Game is paused! Please resume the game.");
+          out = "Game is paused! Please resume the game.";
         } else {
-          say("Game not Found!");
+          out = "Game not Found!";
         }
       }
       break;
@@ -212,7 +211,7 @@ async function runCommand(
         stopGame(quiz);
         say("Game stopped succesfully!");
       } else {
-        say("Game not found!");
+        out = "Game not found!";
       }
       break;
     }
@@ -225,11 +224,11 @@ async function runCommand(
         say("Game resumed!");
       } else {
         if (!quiz.running) {
-          say("Please start the game first!");
+          out = "Please start the game first!";
         } else if (!quiz.paused) {
-          say("Game is already running!");
+          out = "Game is already running!";
         } else {
-          say("Game not Found!");
+          out = "Game not Found!";
         }
       }
       break;
@@ -242,9 +241,9 @@ async function runCommand(
         say("Game paused!");
       } else {
         if (!quiz.running) {
-          say("Please start the game first!");
+          out = "Please start the game first!";
         } else {
-          say("Game not Found!");
+          out = "Game not Found!";
         }
       }
       break;
@@ -261,7 +260,7 @@ async function runCommand(
           startGame(app, context, say, quiz, channelName);
         }, 1000);
       } else {
-        say("Game not found!");
+        out = "Game not found!";
       }
       break;
     }
@@ -293,7 +292,15 @@ async function runCommand(
       break;
   }
   if (out) {
-    await say(`${out}`);
+    let message: any = {
+      token: context.botToken,
+      channel: user,
+      user: user,
+      text: out,
+      attachments: [],
+    };
+
+    await app.client.chat.postEphemeral(message);
   }
 }
 app.command(
@@ -434,6 +441,7 @@ app.view(
     let messageObj: any = {
       token: context.botToken,
       channel: user,
+      user: user,
       text: "",
     };
     quiz.save(async function(err: any) {
@@ -445,7 +453,7 @@ app.view(
       }
       // Message the user
       try {
-        await app.client.chat.postMessage(messageObj);
+        await app.client.chat.postEphemeral(messageObj);
       } catch (error) {
         console.error(error);
       }
@@ -470,6 +478,7 @@ app.view(
     let messageObj: any = {
       token: context.botToken,
       channel: user,
+      user: user,
       text: "",
     };
     quiz.save(async function(err: any) {
@@ -481,7 +490,7 @@ app.view(
       }
       // Message the user
       try {
-        await app.client.chat.postMessage(messageObj);
+        await app.client.chat.postEphemeral(messageObj);
       } catch (error) {
         console.error(error);
       }
@@ -504,14 +513,16 @@ app.view(
     let messageObj: any = {
       token: context.botToken,
       channel: user,
+      user: user,
       text: "",
     };
 
     if (!quiz || quiz.userId !== user) {
       try {
-        await app.client.chat.postMessage({
+        await app.client.chat.postEphemeral({
           token: context.botToken,
           channel: user,
+          user: user,
           text: "Quiz not found",
         });
       } catch (error) {
@@ -528,7 +539,7 @@ app.view(
         }
         // Message the user
         try {
-          await app.client.chat.postMessage(messageObj);
+          await app.client.chat.postEphemeral(messageObj);
         } catch (error) {
           console.error(error);
         }

@@ -217,42 +217,13 @@ export async function showGameList(
   userId: any,
   context: any
 ) {
-  // add user score by 1
-
-  // {
-  //   text: "Choose a game to play",
-  //   fallback: "You are unable to choose a game",
-  //   callback_id: "button_callback",
-  //   color: "#3AA3E3",
-  //   actions: [
-  //     {
-  //       name: "edit",
-  //       text: "Edit Game",
-  //       type: "button",
-  //       value: "maze",
-  //     },
-  //     {
-  //       name: "game",
-  //       text: "Delete Game",
-  //       style: "danger",
-  //       type: "button",
-  //       value: "war",
-  //       confirm: {
-  //         title: "Are you sure?",
-  //         text: "",
-  //         ok_text: "Yes",
-  //         dismiss_text: "No",
-  //       },
-  //     },
-  //   ],
-  // },
-
   const user = userId;
   const quizzes = await QuizModel.find({ userId: user });
   if (quizzes.length) {
     let message: any = {
       token: context.botToken,
       channel: userId,
+      user: userId,
       text: "List of games.",
       attachments: [],
     };
@@ -262,8 +233,11 @@ export async function showGameList(
       message.attachments.push(attachment);
     });
 
-    say(message);
+    await app.client.chat.postEphemeral(message);
+
+    // postEphemeral
+    // say(message);
   } else {
-    say(`No quizzes found!`);
+    await app.client.chat.postEphemeral(`No quizzes found!`);
   }
 }
