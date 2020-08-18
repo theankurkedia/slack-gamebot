@@ -24,16 +24,20 @@ export default class ScoreBoard {
     console.log(this.score, scoreboardString);
     return scoreboardString;
   }
-  getWinner() {
+  getWinners() {
     let max = 0;
-    let winner = ""; // Consider a tie
+    let winners: any = []; // Consider a tie
     this.score.forEach((score, userId) => {
       if (score > max) {
         max = score;
-        winner = userId;
+      }
+    });
+    this.score.forEach((score, userId) => {
+      if (score === max) {
+        winners.push(userId);
       }
     });
 
-    return winner;
+    return winners;
   }
 }

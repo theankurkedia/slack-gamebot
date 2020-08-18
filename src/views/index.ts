@@ -204,7 +204,7 @@ export function getModalView(
   viewId?: string,
   data?: any
 ) {
-  console.log("*** 🔥 data", data);
+  // console.log("*** 🔥 data", data);
   const questionElements = getStaticQuestionAnswerElements(questionNos, data);
   return {
     token: context.botToken,
