@@ -205,21 +205,23 @@ export async function showGameList(
   context: any,
   body: any
 ) {
+  let message: any = {
+    token: context.botToken,
+    channel: body.channel_name,
+    user: userId,
+    text: "List of games.",
+    attachments: [],
+  };
+
   const quizes = await QuizModel.find({ userId });
   if (quizes && quizes.length) {
-    let message: any = {
-      token: context.botToken,
-      channel: body.channel_name,
-      user: userId,
-      text: "List of games.",
-      attachments: [],
-    };
     forEach(quizes, (quiz) => {
       const attachment: any = getButtonAttachment(quiz);
       message.attachments.push(attachment);
     });
     await app.client.chat.postEphemeral(message);
   } else {
-    await app.client.chat.postEphemeral(`No quizes found!`);
+    message.text = `No games found!`;
+    await app.client.chat.postEphemeral(message);
   }
 }
