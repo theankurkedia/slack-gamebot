@@ -21,7 +21,7 @@ ScoreboardSchema.methods = {
   },
 
   getFormattedScoreboard() {
-    console.log("calculating score board...", this.score);
+    // console.log("calculating score board...", this.score);
     let scoreboardString = "";
     this.score.forEach((score: any, userId: any) => {
       scoreboardString += `<@${userId}>                      ${score}\n`;
