@@ -516,8 +516,7 @@ app.view(
         console.error(error);
       }
     } else {
-      // quiz.addAllQuestions(quizFormData.questions);
-
+      quiz.addAllQuestions(quizFormData.questions);
       quiz.save(async function (err: any) {
         if (err) {
           messageObj.text = `There was an error with your submission \n \`${err.message}\``;
