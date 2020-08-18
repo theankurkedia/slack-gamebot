@@ -1,5 +1,5 @@
 require("dotenv").config();
-import { App, ViewSubmitAction, AckFn } from "@slack/bolt";
+import { App } from "@slack/bolt";
 import {
   getScoreboard,
   getUserScore,
@@ -17,10 +17,8 @@ import {
   addQuestionsModal,
 } from "./views";
 import mongoose from "mongoose";
-import { QuestionModel } from "./models/Question";
 import { QuizModel } from "./models/Quiz";
 import {
-  getValueFromFormInput,
   getButtonAttachment,
   getGameNameFromView,
   getQuestionNumberFromView,
@@ -39,25 +37,10 @@ mongoose
   })
   .then(() => {
     console.log("connected");
-
-    // console.log(instance);
   })
   .catch((err: any) => {
     console.log("error in connection", err);
   });
-
-// instance.name = "hello";
-
-// const question = new QuestionModel();
-// question.question = "How are you?";
-// instance.questions = [question];
-
-// instance.save(function(err: any) {
-//   //
-// });
-
-// const m = new MyModel();
-// m.save();
 
 const app = new App({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
@@ -110,42 +93,6 @@ app.message("list", async ({ say, context, message }) => {
   // });
 });
 
-// app.command("/botsuraj", async ({ ack, body, say, context }) => {
-//   await ack();
-//   const quiz = await QuizModel.find({});
-//   if (quiz) {
-//     console.log(quiz);
-//     await say(`Quiz with name ${body.text} found`);
-//   } else {
-//     await say("Sorry, Invalid command");
-//   }
-//   // const quiz = new QuizModel();
-//   // quiz.name = "Test";
-//   // quiz.save(function(err: any) {
-//   //   if (err) {
-//   //     console.log("hello here", err.message);
-//   //     say(err.message);
-//   //   } else {
-//   //     say("Quiz created successfully");
-//   //   }
-//   // });
-// });
-
-// app.command("/botsuraj", async ({ ack, body, say, context }) => {
-//   console.log("jello here", context, body);
-
-//   await say("Quiz created successfully");
-//   // const quiz = new QuizModel();
-//   // quiz.name = "Test";
-//   // quiz.save(function(err: any) {
-//   //   if (err) {
-//   //     console.log("hello here", err.message);
-//   //     say(err.message);
-//   //   } else {
-//   //     say("Quiz created successfully");
-//   //   }
-//   // });
-// });
 const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <questionNos = 5> - create a new game
 /${process.env.COMMAND_NAME} edit <gameName> - edit existing game
 /${process.env.COMMAND_NAME} addQuestions <gameName> <questionNos = 1> - edit existing game
@@ -393,115 +340,12 @@ app.action(
         quiz
       );
     }
-
-    // if (action.name === "edit") {
-    //   let data = await QuizModel.findOne({ name: action.value });
-    //   const user = body["user"]["id"];
-    //   if (data && user === data.userId) {
-    //     await showGameEditModal(app, body, context, action.value, data);
-    //   } else {
-    //     say("Something went wrong!");
-    //   }
-    // } else if (action.name === "delete") {
-    //   //
-    //   console.log(action);
-    //   let name = action.value;
-
-    //   QuizModel.deleteOne({ name }, function(err: any) {
-    //     if (err) return say("Something went wrong!");
-    //     // deleted at most one tank document
-    //     say(`Quiz \`${name}\` deleted successfully.`);
-    //   });
-    // }
   }
 );
 
-// app.view(
-//   "question_edit_callback_id",
-//   async ({ ack, context, view, body }: any) => {
-//     await ack();
-//     let quizName = getGameNameFromView(view);
-//     let questionIndex = getQuestionIndex(view);
-
-//     const quiz = await QuizModel.findOne({ name: quizName });
-//     if (quiz) {
-//       const questionObj = new QuestionModel();
-//       let question = getValueFromView(view, "question_view");
-//       let answer = getValueFromView(view, "answer_view");
-//       questionObj.question = question;
-//       questionObj.answer = answer;
-//       quiz.addQuestion(questionObj, questionIndex);
-
-//       await quiz.save(async function (err: any) {
-//         // console.log("error", err);
-//         if (!err) {
-//         }
-//         // if (err) {
-//         //   messageObj.text = `There was an error with your submission \n \`${err.message}\``;
-//         // } else {
-//         //   messageObj.text = `Quiz created successfully.`;
-//         //   messageObj.attachments = [getButtonAttachment(quiz)];
-//         // }
-//         // // Message the user
-//         // try {
-//         //   await app.client.chat.postMessage(messageObj);
-//         // } catch (error) {
-//         //   console.error(error);
-//         // }
-//       });
-//     }
-//   }
-// );
-// app.view(
-//   "question_add_callback_id",
-//   async ({ ack, context, view, body }: any) => {
-//     // Submission of modal
-//     let quizName = getGameNameFromView(view);
-//     await ack();
-//     const quiz = await QuizModel.findOne({ name: quizName });
-//     if (quiz) {
-//       const questionObj = new QuestionModel();
-//       let question = getValueFromView(view, "question_view");
-//       let answer = getValueFromView(view, "answer_view");
-//       questionObj.question = question;
-//       questionObj.answer = answer;
-//       quiz.addQuestion(questionObj);
-//       await quiz.save(async function (err: any) {
-//         // console.log("error", err);
-//         if (!err) {
-//         }
-//         // if (err) {
-//         //   messageObj.text = `There was an error with your submission \n \`${err.message}\``;
-//         // } else {
-//         //   messageObj.text = `Quiz created successfully.`;
-//         //   messageObj.attachments = [getButtonAttachment(quiz)];
-//         // }
-//         // // Message the user
-//         // try {
-//         //   await app.client.chat.postMessage(messageObj);
-//         // } catch (error) {
-//         //   console.error(error);
-//         // }
-//       });
-//       // await updateQuestionModal(
-//       //   app,
-//       //   body,
-//       //   context,
-//       //   quizName,
-//       //   quiz.questions.length + 1,
-//       //   get(body, "view.callback_id") === "modal_create_callback_id",
-//       //   quiz
-//       // );
-//     }
-
-//     // quiz.save();
-//     // }
-//   }
-// );
 app.view(
   "modal_create_callback_id",
   async ({ ack, context, view, body }: any) => {
-    // Submission of modal
     await ack();
     const user = body["user"]["id"];
     let quizName = getGameNameFromView(view);
@@ -573,8 +417,6 @@ app.view(
 app.view(
   "modal_edit_callback_id",
   async ({ action, ack, context, view, body, say }: any) => {
-    // Submission of modal
-
     await ack();
     const user = body["user"]["id"];
     let msg = "";

@@ -1,6 +1,10 @@
 import { get, capitalize } from "lodash";
 
-function getQuestionAnswerElements(number: number, data?: any) {
+function getQuestionAnswerElements(
+  number: number,
+  data?: any,
+  showLastDivider: boolean = true
+) {
   let elements: any = [];
   for (let i = 0; i < number; i++) {
     let questionData = get(data, `questions[${i}]`);
@@ -46,10 +50,12 @@ function getQuestionAnswerElements(number: number, data?: any) {
           },
         ],
       },
-      {
-        type: "divider",
-      },
     ]);
+    if (i !== number - 1 || showLastDivider) {
+      elements.push({
+        type: "divider",
+      });
+    }
   }
   return elements;
 }
@@ -219,7 +225,11 @@ export function getModalView(
   viewId?: string,
   data?: any
 ) {
-  const questionElements = getQuestionAnswerElements(questionNos, data);
+  const questionElements = getQuestionAnswerElements(
+    questionNos,
+    data,
+    callbackContext !== "addQuestions"
+  );
   const configElements =
     callbackContext !== "addQuestions" ? getConfigElements(data) : [];
   return {
@@ -321,19 +331,6 @@ export async function addQuestionsModal(
   name: string,
   questionNos: number
 ) {
-  // console.log(
-  //   app.client.views,
-  //   "&&&&&&",
-  //   getModalView(
-  //     body,
-  //     context,
-  //     gameName,
-  //     questionNos,
-  //     newQuiz,
-  //     body.view.id,
-  //     data
-  //   )
-  // );
   try {
     await app.client.views.open(
       getModalView(body, context, name, questionNos, "addQuestions")
