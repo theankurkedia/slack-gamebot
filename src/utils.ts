@@ -64,6 +64,12 @@ export const getButtonAttachment = (quiz: any): any => {
     color: "#3AA3E3",
     actions: [
       {
+        name: "add_question",
+        text: "Add Question",
+        type: "button",
+        value: quiz.name,
+      },
+      {
         name: "edit",
         text: "Edit",
         type: "button",

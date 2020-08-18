@@ -428,6 +428,15 @@ app.action(
       runCommand(["pause", action.value], body, context, say, command, user);
     } else if (action.name === "resume") {
       runCommand(["resume", action.value], body, context, say, command, user);
+    } else if (action.name === "add_question") {
+      runCommand(
+        ["addQuestions", action.value],
+        body,
+        context,
+        say,
+        command,
+        user
+      );
     }
   }
 );
