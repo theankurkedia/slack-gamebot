@@ -15,7 +15,7 @@ const Config = new Schema({
 
 const QuizSchema = new Schema({
   name: { type: String, unique: true, required: true },
-  userId: { type: String, unique: true, require: true },
+  userId: { type: String, require: true },
   config: {
     type: Config,
     default: { timePerQuestion: 10, answerMatchPercentage: 0.8 },

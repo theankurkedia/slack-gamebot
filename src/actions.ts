@@ -178,7 +178,6 @@ export async function startGame(
   quiz1.scoreboard = scoreboard;
   await quiz1.save();
 
-  console.log(channelName, "hello channel");
   playGame(app, context, say, quiz1, channelName);
 }
 

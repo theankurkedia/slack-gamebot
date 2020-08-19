@@ -223,7 +223,8 @@ async function runCommand(textArray, body, context, say, command, user, channelN
             break;
         }
         case "list":
-            await actions_1.showGameList(app, say, user, context, channelName);
+            let msgChannel = channelName !== "directmessage" ? channelName : user;
+            await actions_1.showGameList(app, say, user, context, msgChannel);
             // TODO: can show a modal for this
             break;
         case "help":
@@ -262,9 +263,10 @@ async function runCommand(textArray, body, context, say, command, user, channelN
             break;
     }
     if (out) {
+        let msgChannel = channelName !== "directmessage" ? channelName : user;
         let message = {
             token: context.botToken,
-            channel: body.channel_name,
+            channel: msgChannel,
             user: user,
             text: out,
             attachments: [],
@@ -276,7 +278,7 @@ app.command(`/${process.env.COMMAND_NAME}`, async ({ ack, body, context, say, co
     await ack();
     let textArray = command.text.split(" ");
     let user = body.user_id;
-    const channelName = body.channel_name !== "directmessage" ? body.channel_name : user;
+    const channelName = body.channel_name;
     // if
     runCommand(textArray, body, context, say, command, user, channelName);
 });
@@ -318,7 +320,6 @@ app.action({ callback_id: "button_callback" }, async ({ context, ack, action, vi
     await ack();
     const user = body["user"]["id"];
     let channelName = body["channel"]["name"];
-    channelName = channelName !== "directmessage" ? channelName : user;
     let messageObj = {
         token: context.botToken,
         channel: user,
