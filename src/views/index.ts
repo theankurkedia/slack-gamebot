@@ -7,6 +7,25 @@ function getQuestionAnswerElements(
 ) {
   let elements: any = [];
   for (let i = 0; i < number; i++) {
+    const deleteButton = data
+      ? [
+          {
+            type: "actions",
+            elements: [
+              {
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  text: "Delete",
+                  emoji: true,
+                },
+                value: `delete_question_${i + 1}`,
+                action_id: "delete_question",
+              },
+            ],
+          },
+        ]
+      : [];
     let questionData = get(data, `questions[${i}]`);
     elements = elements.concat([
       {
@@ -35,21 +54,7 @@ function getQuestionAnswerElements(
           emoji: true,
         },
       },
-      {
-        type: "actions",
-        elements: [
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Delete",
-              emoji: true,
-            },
-            value: `delete_question_${i + 1}`,
-            action_id: "delete_question",
-          },
-        ],
-      },
+      ...deleteButton,
     ]);
     if (i !== number - 1 || showLastDivider) {
       elements.push({
