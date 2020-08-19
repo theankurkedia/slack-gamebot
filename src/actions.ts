@@ -179,9 +179,6 @@ export async function startGame(
 
   playGame(app, context, say, quiz1, channelName);
 }
-export function cancelGame(name: string) {
-  // cancel game
-}
 
 export function getUserScore(quiz: typeof QuizModel, userId: string) {
   if (quiz.scoreboard) {
