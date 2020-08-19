@@ -4,7 +4,6 @@ import {
   getScoreboard,
   getUserScore,
   startGame,
-  cancelGame,
   showGameList,
   stopGame,
   resumeGame,
@@ -54,7 +53,6 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <ques
 /${process.env.COMMAND_NAME} pause <gameName>                          - pause the game
 /${process.env.COMMAND_NAME} resume <gameName>                         - resume the game
 /${process.env.COMMAND_NAME} restart <gameName>                        - restart the game
-/${process.env.COMMAND_NAME} cancel <gameName>                         - cancel the creation of game
 /${process.env.COMMAND_NAME} list                                      - list of all games
 /${process.env.COMMAND_NAME} help                                      - list out the commands
 /${process.env.COMMAND_NAME} myScore <gameName>                        - find the result of person \`\`\``;
@@ -152,7 +150,7 @@ async function runCommand(
         let quiz = await QuizModel.findOne({ name: textArray[1] });
         if (quiz) {
           if (user === quiz.userId) {
-            stopGame(quiz);
+            await stopGame(quiz);
             out = "Game stopped succesfully!";
           } else {
             out = "Game is paused! Please resume the game.";
@@ -232,14 +230,6 @@ async function runCommand(
       }
       break;
     }
-    case "cancel":
-      if (textArray[1]) {
-        out = "Cancelling the game";
-        cancelGame(textArray[1]);
-      } else {
-        out = "Please enter game name!";
-      }
-      break;
     case "list":
       await showGameList(app, say, user, context, body);
       // TODO: can show a modal for this
@@ -361,7 +351,7 @@ app.action(
       const user = body["user"]["id"];
 
       if (data && user === data.userId && !data.running) {
-        QuizModel.deleteOne({ name }, async function(err: any) {
+        QuizModel.deleteOne({ name }, async function (err: any) {
           if (err) {
             messageObj.text = "Error occured!";
           } else {
@@ -476,7 +466,7 @@ app.view(
       user: user,
       text: "",
     };
-    quiz.save(async function(err: any) {
+    quiz.save(async function (err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -513,7 +503,7 @@ app.view(
       user: user,
       text: "",
     };
-    quiz.save(async function(err: any) {
+    quiz.save(async function (err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -563,7 +553,7 @@ app.view(
     } else {
       quiz.addAllQuestions(quizFormData.questions);
       quiz.config = quizFormData.config;
-      quiz.save(async function(err: any) {
+      quiz.save(async function (err: any) {
         if (err) {
           messageObj.text = `There was an error with your submission \n \`${err.message}\``;
         } else {
