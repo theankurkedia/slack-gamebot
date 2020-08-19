@@ -64,7 +64,7 @@ function getQuestionAnswerElements(
   }
   return elements;
 }
-function getConfigElements(data: any) {
+function getConfigElements(config: any) {
   return [
     {
       type: "context",
@@ -82,8 +82,8 @@ function getConfigElements(data: any) {
       element: {
         type: "static_select",
         initial_option:
-          data && get(data, "config.answerMatchPercentage")
-            ? data.config.answerMatchPercentage == "0.8"
+          config && get(config, "answerMatchPercentage")
+            ? config.answerMatchPercentage == "0.8"
               ? {
                   text: {
                     type: "plain_text",
@@ -137,8 +137,8 @@ function getConfigElements(data: any) {
       element: {
         type: "plain_text_input",
         initial_value:
-          data && get(data, "config.timePerQuestion")
-            ? get(data, "config.timePerQuestion").toString()
+          config && get(config, "timePerQuestion")
+            ? get(config, "timePerQuestion").toString()
             : undefined,
         placeholder: {
           type: "plain_text",
@@ -167,8 +167,19 @@ export function getModalView(
     data,
     callbackContext !== "addQuestions"
   );
+
+  let config = get(data, "config");
+
+  if (!config) {
+    config = {
+      answerMatchPercentage: "0.8",
+      timePerQuestion: "10",
+    };
+  }
   const configElements =
-    callbackContext !== "addQuestions" ? getConfigElements(data) : [];
+    callbackContext !== "addQuestions" ? getConfigElements(config) : [];
+
+  console.log(configElements, "hello");
   return {
     token: context.botToken,
     view_id: viewId,
