@@ -62,7 +62,7 @@ function getQuestionAnswerElements(number, data, showLastDivider = true) {
     }
     return elements;
 }
-function getConfigElements(data) {
+function getConfigElements(config) {
     return [
         {
             type: "context",
@@ -79,8 +79,8 @@ function getConfigElements(data) {
             block_id: "answerMatchPercentage",
             element: {
                 type: "static_select",
-                initial_option: data && lodash_1.get(data, "config.answerMatchPercentage")
-                    ? data.config.answerMatchPercentage == "0.8"
+                initial_option: config && lodash_1.get(config, "answerMatchPercentage")
+                    ? config.answerMatchPercentage == "0.8"
                         ? {
                             text: {
                                 type: "plain_text",
@@ -133,8 +133,8 @@ function getConfigElements(data) {
             block_id: "timePerQuestion",
             element: {
                 type: "plain_text_input",
-                initial_value: data && lodash_1.get(data, "config.timePerQuestion")
-                    ? lodash_1.get(data, "config.timePerQuestion").toString()
+                initial_value: config && lodash_1.get(config, "timePerQuestion")
+                    ? lodash_1.get(config, "timePerQuestion").toString()
                     : undefined,
                 placeholder: {
                     type: "plain_text",
@@ -151,7 +151,15 @@ function getConfigElements(data) {
 }
 function getModalView(body, context, gameName, questionNos, callbackContext, viewId, data) {
     const questionElements = getQuestionAnswerElements(questionNos, data, callbackContext !== "addQuestions");
-    const configElements = callbackContext !== "addQuestions" ? getConfigElements(data) : [];
+    let config = lodash_1.get(data, "config");
+    if (!config) {
+        config = {
+            answerMatchPercentage: "0.8",
+            timePerQuestion: "10",
+        };
+    }
+    const configElements = callbackContext !== "addQuestions" ? getConfigElements(config) : [];
+    console.log(configElements, "hello");
     return {
         token: context.botToken,
         view_id: viewId,
