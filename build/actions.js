@@ -138,6 +138,7 @@ async function startGame(app, context, say, quiz1, channelName) {
     const scoreboard = new Scoreboard_1.ScoreboardModel();
     quiz1.scoreboard = scoreboard;
     await quiz1.save();
+    console.log(channelName, "hello channel");
     playGame(app, context, say, quiz1, channelName);
 }
 exports.startGame = startGame;

@@ -45,7 +45,7 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <ques
 /${process.env.COMMAND_NAME} list                                      - list of all games
 /${process.env.COMMAND_NAME} help                                      - list out the commands
 /${process.env.COMMAND_NAME} myScore <gameName>                        - find the result of person \`\`\``;
-async function runCommand(textArray, body, context, say, command, user) {
+async function runCommand(textArray, body, context, say, command, user, channelName) {
     let out;
     switch (textArray[0]) {
         case "create": {
@@ -98,7 +98,6 @@ async function runCommand(textArray, body, context, say, command, user) {
         }
         case "start":
             if (textArray[1]) {
-                const channelName = body.channel_name;
                 let quiz = await Quiz_1.QuizModel.findOne({ name: textArray[1] });
                 if (quiz) {
                     if (user === quiz.userId && !quiz.running && !quiz.paused) {
@@ -147,7 +146,6 @@ async function runCommand(textArray, body, context, say, command, user) {
         }
         case "resume": {
             if (textArray[1]) {
-                const channelName = body.channel_name;
                 let quiz = await Quiz_1.QuizModel.findOne({ name: textArray[1] });
                 if (quiz) {
                     if (user === quiz.userId && quiz.running && quiz.paused) {
@@ -177,7 +175,6 @@ async function runCommand(textArray, body, context, say, command, user) {
         }
         case "pause": {
             if (textArray[1]) {
-                const channelName = body.channel_name;
                 let quiz = await Quiz_1.QuizModel.findOne({ name: textArray[1] });
                 if (quiz) {
                     if (user === quiz.userId && quiz.running) {
@@ -204,7 +201,6 @@ async function runCommand(textArray, body, context, say, command, user) {
         }
         case "restart": {
             if (textArray[1]) {
-                const channelName = body.channel_name;
                 let quiz = await Quiz_1.QuizModel.findOne({ name: textArray[1] });
                 let user = body.user_id;
                 if (quiz) {
@@ -290,7 +286,8 @@ app.command(`/${process.env.COMMAND_NAME}`, async ({ ack, body, context, say, co
     await ack();
     let textArray = command.text.split(" ");
     let user = body.user_id;
-    runCommand(textArray, body, context, say, command, user);
+    const channelName = body.channel_name;
+    runCommand(textArray, body, context, say, command, user, channelName);
 });
 // app.action("add_question", async ({ ack, context, body, view }: any) => {
 //   await ack();
@@ -329,6 +326,7 @@ app.command(`/${process.env.COMMAND_NAME}`, async ({ ack, body, context, say, co
 app.action({ callback_id: "button_callback" }, async ({ context, ack, action, view, body, say, command }) => {
     await ack();
     const user = body["user"]["id"];
+    const channelName = body["channel"]["name"];
     let messageObj = {
         token: context.botToken,
         channel: user,
@@ -367,19 +365,19 @@ app.action({ callback_id: "button_callback" }, async ({ context, ack, action, vi
         }
     }
     else if (action.name === "start") {
-        runCommand(["start", action.value], body, context, say, command, user);
+        runCommand(["start", action.value], body, context, say, command, user, channelName);
     }
     else if (action.name === "stop") {
-        runCommand(["stop", action.value], body, context, say, command, user);
+        runCommand(["stop", action.value], body, context, say, command, user, channelName);
     }
     else if (action.name === "pause") {
-        runCommand(["pause", action.value], body, context, say, command, user);
+        runCommand(["pause", action.value], body, context, say, command, user, channelName);
     }
     else if (action.name === "resume") {
-        runCommand(["resume", action.value], body, context, say, command, user);
+        runCommand(["resume", action.value], body, context, say, command, user, channelName);
     }
     else if (action.name === "add_question") {
-        runCommand(["addQuestions", action.value], body, context, say, command, user);
+        runCommand(["addQuestions", action.value], body, context, say, command, user, channelName);
     }
 });
 app.action("delete_question", async ({ context, ack, action, view, body, say }) => {
