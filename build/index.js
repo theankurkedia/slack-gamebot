@@ -41,7 +41,6 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <ques
 /${process.env.COMMAND_NAME} pause <gameName>                          - pause the game
 /${process.env.COMMAND_NAME} resume <gameName>                         - resume the game
 /${process.env.COMMAND_NAME} restart <gameName>                        - restart the game
-/${process.env.COMMAND_NAME} cancel <gameName>                         - cancel the creation of game
 /${process.env.COMMAND_NAME} list                                      - list of all games
 /${process.env.COMMAND_NAME} help                                      - list out the commands
 /${process.env.COMMAND_NAME} myScore <gameName>                        - find the result of person \`\`\``;
@@ -128,7 +127,7 @@ async function runCommand(textArray, body, context, say, command, user, channelN
                 let quiz = await Quiz_1.QuizModel.findOne({ name: textArray[1] });
                 if (quiz) {
                     if (user === quiz.userId) {
-                        actions_1.stopGame(quiz);
+                        await actions_1.stopGame(quiz);
                         out = "Game stopped succesfully!";
                     }
                     else {
@@ -223,17 +222,8 @@ async function runCommand(textArray, body, context, say, command, user, channelN
             }
             break;
         }
-        case "cancel":
-            if (textArray[1]) {
-                out = "Cancelling the game";
-                actions_1.cancelGame(textArray[1]);
-            }
-            else {
-                out = "Please enter game name!";
-            }
-            break;
         case "list":
-            await actions_1.showGameList(app, say, user, context, body);
+            await actions_1.showGameList(app, say, user, context, channelName);
             // TODO: can show a modal for this
             break;
         case "help":
@@ -286,7 +276,8 @@ app.command(`/${process.env.COMMAND_NAME}`, async ({ ack, body, context, say, co
     await ack();
     let textArray = command.text.split(" ");
     let user = body.user_id;
-    const channelName = body.channel_name;
+    const channelName = body.channel_name !== "directmessage" ? body.channel_name : user;
+    // if
     runCommand(textArray, body, context, say, command, user, channelName);
 });
 // app.action("add_question", async ({ ack, context, body, view }: any) => {
@@ -326,7 +317,8 @@ app.command(`/${process.env.COMMAND_NAME}`, async ({ ack, body, context, say, co
 app.action({ callback_id: "button_callback" }, async ({ context, ack, action, view, body, say, command }) => {
     await ack();
     const user = body["user"]["id"];
-    const channelName = body["channel"]["name"];
+    let channelName = body["channel"]["name"];
+    channelName = channelName !== "directmessage" ? channelName : user;
     let messageObj = {
         token: context.botToken,
         channel: user,

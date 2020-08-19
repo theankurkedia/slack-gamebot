@@ -5,6 +5,25 @@ const lodash_1 = require("lodash");
 function getQuestionAnswerElements(number, data, showLastDivider = true) {
     let elements = [];
     for (let i = 0; i < number; i++) {
+        const deleteButton = data
+            ? [
+                {
+                    type: "actions",
+                    elements: [
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "Delete",
+                                emoji: true,
+                            },
+                            value: `delete_question_${i + 1}`,
+                            action_id: "delete_question",
+                        },
+                    ],
+                },
+            ]
+            : [];
         let questionData = lodash_1.get(data, `questions[${i}]`);
         elements = elements.concat([
             {
@@ -33,21 +52,7 @@ function getQuestionAnswerElements(number, data, showLastDivider = true) {
                     emoji: true,
                 },
             },
-            {
-                type: "actions",
-                elements: [
-                    {
-                        type: "button",
-                        text: {
-                            type: "plain_text",
-                            text: "Delete",
-                            emoji: true,
-                        },
-                        value: `delete_question_${i + 1}`,
-                        action_id: "delete_question",
-                    },
-                ],
-            },
+            ...deleteButton,
         ]);
         if (i !== number - 1 || showLastDivider) {
             elements.push({
