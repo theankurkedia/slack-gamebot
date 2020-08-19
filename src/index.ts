@@ -231,7 +231,8 @@ async function runCommand(
       break;
     }
     case "list":
-      await showGameList(app, say, user, context, body);
+      let msgChannel = channelName !== "directmessage" ? channelName : user;
+      await showGameList(app, say, user, context, msgChannel);
       // TODO: can show a modal for this
       break;
     case "help":
@@ -266,9 +267,11 @@ async function runCommand(
       break;
   }
   if (out) {
+    let msgChannel = channelName !== "directmessage" ? channelName : user;
+
     let message: any = {
       token: context.botToken,
-      channel: body.channel_name,
+      channel: msgChannel,
       user: user,
       text: out,
       attachments: [],
@@ -284,7 +287,7 @@ app.command(
     let textArray = command.text.split(" ");
     let user = body.user_id;
     const channelName = body.channel_name;
-
+    // if
     runCommand(textArray, body, context, say, command, user, channelName);
   }
 );
@@ -329,7 +332,8 @@ app.action(
   async ({ context, ack, action, view, body, say, command }: any) => {
     await ack();
     const user = body["user"]["id"];
-    const channelName = body["channel"]["name"];
+    let channelName = body["channel"]["name"];
+
     let messageObj: any = {
       token: context.botToken,
       channel: user,
@@ -351,7 +355,7 @@ app.action(
       const user = body["user"]["id"];
 
       if (data && user === data.userId && !data.running) {
-        QuizModel.deleteOne({ name }, async function (err: any) {
+        QuizModel.deleteOne({ name }, async function(err: any) {
           if (err) {
             messageObj.text = "Error occured!";
           } else {
@@ -466,7 +470,7 @@ app.view(
       user: user,
       text: "",
     };
-    quiz.save(async function (err: any) {
+    quiz.save(async function(err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -503,7 +507,7 @@ app.view(
       user: user,
       text: "",
     };
-    quiz.save(async function (err: any) {
+    quiz.save(async function(err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -553,7 +557,7 @@ app.view(
     } else {
       quiz.addAllQuestions(quizFormData.questions);
       quiz.config = quizFormData.config;
-      quiz.save(async function (err: any) {
+      quiz.save(async function(err: any) {
         if (err) {
           messageObj.text = `There was an error with your submission \n \`${err.message}\``;
         } else {

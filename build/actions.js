@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.showGameList = exports.getScoreboard = exports.getUserScore = exports.cancelGame = exports.startGame = exports.resumeGame = exports.pauseGame = exports.stopGame = void 0;
+exports.showGameList = exports.getScoreboard = exports.getUserScore = exports.startGame = exports.resumeGame = exports.pauseGame = exports.stopGame = void 0;
 const quizRunner_1 = __importDefault(require("./services/quizRunner"));
 const lodash_1 = require("lodash");
 const Quiz_1 = require("./models/Quiz");
@@ -138,14 +138,9 @@ async function startGame(app, context, say, quiz1, channelName) {
     const scoreboard = new Scoreboard_1.ScoreboardModel();
     quiz1.scoreboard = scoreboard;
     await quiz1.save();
-    console.log(channelName, "hello channel");
     playGame(app, context, say, quiz1, channelName);
 }
 exports.startGame = startGame;
-function cancelGame(name) {
-    // cancel game
-}
-exports.cancelGame = cancelGame;
 function getUserScore(quiz, userId) {
     if (quiz.scoreboard) {
         let score = quiz.scoreboard.getUserScore(userId);
@@ -165,10 +160,11 @@ async function getScoreboard(quiz) {
     }
 }
 exports.getScoreboard = getScoreboard;
-async function showGameList(app, say, userId, context, body) {
+async function showGameList(app, say, userId, context, channelName) {
+    console.log(channelName, "hell");
     let message = {
         token: context.botToken,
-        channel: body.channel_name,
+        channel: channelName,
         user: userId,
         text: "List of games.",
         attachments: [],

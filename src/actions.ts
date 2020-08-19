@@ -178,7 +178,6 @@ export async function startGame(
   quiz1.scoreboard = scoreboard;
   await quiz1.save();
 
-  console.log(channelName, "hello channel");
   playGame(app, context, say, quiz1, channelName);
 }
 
@@ -204,11 +203,12 @@ export async function showGameList(
   say: any,
   userId: any,
   context: any,
-  body: any
+  channelName: any
 ) {
+  console.log(channelName, "hell");
   let message: any = {
     token: context.botToken,
-    channel: body.channel_name,
+    channel: channelName,
     user: userId,
     text: "List of games.",
     attachments: [],
