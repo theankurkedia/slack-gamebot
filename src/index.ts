@@ -65,7 +65,8 @@ async function runCommand(
   context: any,
   say: any,
   command: any,
-  user: any
+  user: any,
+  channelName: any
 ) {
   let out;
 
@@ -126,7 +127,6 @@ async function runCommand(
     }
     case "start":
       if (textArray[1]) {
-        const channelName = body.channel_name;
         let quiz = await QuizModel.findOne({ name: textArray[1] });
         if (quiz) {
           if (user === quiz.userId && !quiz.running && !quiz.paused) {
@@ -167,7 +167,6 @@ async function runCommand(
     }
     case "resume": {
       if (textArray[1]) {
-        const channelName = body.channel_name;
         let quiz = await QuizModel.findOne({ name: textArray[1] });
         if (quiz) {
           if (user === quiz.userId && quiz.running && quiz.paused) {
@@ -192,7 +191,6 @@ async function runCommand(
     }
     case "pause": {
       if (textArray[1]) {
-        const channelName = body.channel_name;
         let quiz = await QuizModel.findOne({ name: textArray[1] });
         if (quiz) {
           if (user === quiz.userId && quiz.running) {
@@ -215,7 +213,6 @@ async function runCommand(
     }
     case "restart": {
       if (textArray[1]) {
-        const channelName = body.channel_name;
         let quiz = await QuizModel.findOne({ name: textArray[1] });
         let user = body.user_id;
         if (quiz) {
@@ -296,8 +293,9 @@ app.command(
     await ack();
     let textArray = command.text.split(" ");
     let user = body.user_id;
+    const channelName = body.channel_name;
 
-    runCommand(textArray, body, context, say, command, user);
+    runCommand(textArray, body, context, say, command, user, channelName);
   }
 );
 
@@ -341,6 +339,7 @@ app.action(
   async ({ context, ack, action, view, body, say, command }: any) => {
     await ack();
     const user = body["user"]["id"];
+    const channelName = body["channel"]["name"];
     let messageObj: any = {
       token: context.botToken,
       channel: user,
@@ -377,13 +376,45 @@ app.action(
         await app.client.chat.postEphemeral(messageObj);
       }
     } else if (action.name === "start") {
-      runCommand(["start", action.value], body, context, say, command, user);
+      runCommand(
+        ["start", action.value],
+        body,
+        context,
+        say,
+        command,
+        user,
+        channelName
+      );
     } else if (action.name === "stop") {
-      runCommand(["stop", action.value], body, context, say, command, user);
+      runCommand(
+        ["stop", action.value],
+        body,
+        context,
+        say,
+        command,
+        user,
+        channelName
+      );
     } else if (action.name === "pause") {
-      runCommand(["pause", action.value], body, context, say, command, user);
+      runCommand(
+        ["pause", action.value],
+        body,
+        context,
+        say,
+        command,
+        user,
+        channelName
+      );
     } else if (action.name === "resume") {
-      runCommand(["resume", action.value], body, context, say, command, user);
+      runCommand(
+        ["resume", action.value],
+        body,
+        context,
+        say,
+        command,
+        user,
+        channelName
+      );
     } else if (action.name === "add_question") {
       runCommand(
         ["addQuestions", action.value],
@@ -391,7 +422,8 @@ app.action(
         context,
         say,
         command,
-        user
+        user,
+        channelName
       );
     }
   }

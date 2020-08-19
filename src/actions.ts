@@ -173,10 +173,12 @@ export async function startGame(
   quiz1.running = true;
   quiz1.paused = false;
   quiz1.currentQuestionIndex = 0;
+
   const scoreboard = new ScoreboardModel();
   quiz1.scoreboard = scoreboard;
   await quiz1.save();
 
+  console.log(channelName, "hello channel");
   playGame(app, context, say, quiz1, channelName);
 }
 export function cancelGame(name: string) {
