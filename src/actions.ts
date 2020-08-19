@@ -26,6 +26,7 @@ function playGame(
     let userAwardedPointForThisRound: string = "";
     quizRunner(quiz1, {
       postQuestion: async (question: any, index: number) => {
+        expectedAnswer = question.answer;
         const result = await app.client.chat.postMessage({
           // The token you used to initialize your app is stored in the `context` object
           token: context.botToken,
@@ -34,9 +35,9 @@ function playGame(
             question.question
           }`,
         });
-        expectedAnswer = question.answer;
       },
       postScoreboard: async (question: any, index: number) => {
+        expectedAnswer = null;
         scoreboard.save();
         const formattedScoreboard = scoreboard.getFormattedScoreboard();
 
@@ -95,7 +96,6 @@ The winner${winners.length > 1 ? "s" : ""} of ${quiz1.name} ${
         }
         // }
 
-        expectedAnswer = null;
         userAwardedPointForThisRound = "";
       },
     });
