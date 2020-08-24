@@ -3,6 +3,19 @@
 
 Quiz bot for Slack
 
+## Run the project
+
+- Clone the project.
+- run `yarn` or `npm install`.
+-  Create a new [slack app](https://api.slack.com/apps).
+-  Copy `.env.example` in a new file `.env`.
+	-  Copy  `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET` from the create slack app.
+	-  Add backend uri in`MONGODB_URI`. 
+	- Add a name for the command with which you want to run in `COMMAND_NAME`.
+- Run `yarn dev`.
+-  Expose your local server URL. We used [ngrok](https://ngrok.com/) for this.
+- Add this URL in your apps needed features. (Interactivity & Shortcuts, Slash Commands and. Event Subscriptions)
+
 ## Commands
 
 #### `/gamebot help` 
@@ -87,6 +100,7 @@ See the scoreboard of the game.
 | Parameters  | Type | Description  | optional |  default value| 
 | :------------: |:-------:|:---------------:|:-------:|:--:|
 | gameName| string | name of the game | false| - | 
+
 
 #### `/gamebot myScore` 
 See your score for the game.
