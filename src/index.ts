@@ -55,7 +55,8 @@ const commandsList = `\`\`\`/${process.env.COMMAND_NAME} create <gameName> <ques
 /${process.env.COMMAND_NAME} restart <gameName>                        - restart the game
 /${process.env.COMMAND_NAME} list                                      - list of all games
 /${process.env.COMMAND_NAME} help                                      - list out the commands
-/${process.env.COMMAND_NAME} myScore <gameName>                        - find the result of person \`\`\``;
+/${process.env.COMMAND_NAME} scoreboard <gameName>                     - see the scoreboard of the game
+/${process.env.COMMAND_NAME} myScore <gameName>                        - see your score for the game \`\`\``;
 
 async function runCommand(
   textArray: any,
@@ -355,7 +356,7 @@ app.action(
       const user = body["user"]["id"];
 
       if (data && user === data.userId && !data.running) {
-        QuizModel.deleteOne({ name }, async function(err: any) {
+        QuizModel.deleteOne({ name }, async function (err: any) {
           if (err) {
             messageObj.text = "Error occured!";
           } else {
@@ -470,7 +471,7 @@ app.view(
       user: user,
       text: "",
     };
-    quiz.save(async function(err: any) {
+    quiz.save(async function (err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -507,7 +508,7 @@ app.view(
       user: user,
       text: "",
     };
-    quiz.save(async function(err: any) {
+    quiz.save(async function (err: any) {
       if (err) {
         messageObj.text = `There was an error with your submission \n \`${err.message}\``;
       } else {
@@ -557,7 +558,7 @@ app.view(
     } else {
       quiz.addAllQuestions(quizFormData.questions);
       quiz.config = quizFormData.config;
-      quiz.save(async function(err: any) {
+      quiz.save(async function (err: any) {
         if (err) {
           messageObj.text = `There was an error with your submission \n \`${err.message}\``;
         } else {
