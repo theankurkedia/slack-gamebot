@@ -107,3 +107,8 @@ See your score for the game.
 | Parameters  | Type | Description  | optional |  default value| 
 | :------------: |:-------:|:---------------:|:-------:|:--:|
 | gameName| string | name of the game | false| - | 
+
+
+<video width="320" height="240" controls>
+  <source src="gamebot.mp4" type="video/mp4">
+</video>
